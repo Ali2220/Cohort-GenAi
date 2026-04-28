@@ -1,3 +1,5 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import Groq from "groq-sdk";
 
 const groq = new Groq({
@@ -10,14 +12,20 @@ async function main() {
     temperature: 0.3,
     // stop: "tr",   // Neutral
     // max_completion_tokens: 1000,
-    // frequency_penalty:
+    // frequency_penalty:,
+
     model: "llama-3.3-70b-versatile",
     messages: [
       // system prompt or system instructions
       {
         role: "system",
-        content:
-          "You are Jarvis, a smart review grader. Your task is to analyze given review and return the sentiment only. Output must be single word",
+        content: `You are Jarvis, a smart review grader. 
+                  Analyze the review and return the output in JSON format only. Dont write any thing else outside the {}
+                  The JSON should have these keys:
+                  1. "sentiment": (Positive, Negative, or Neutral)
+                  2. "score": (A confidence score between 0 and 1)
+                  3. "issue_detected": (Boolean - true if there's a problem mentioned)
+        `,
       },
       {
         role: "user",
@@ -26,9 +34,13 @@ async function main() {
         `,
       },
     ],
-    
+
+    // structured Output
+    response_format: {
+      type: "json_object",
+    }
   });
 
-  console.log(completion.choices[0].message.content);
+  console.log(JSON.parse(completion.choices[0].message.content));
 }
 main();
