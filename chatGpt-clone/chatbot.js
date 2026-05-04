@@ -2,69 +2,81 @@ import dotenv from 'dotenv';
 dotenv.config(); // .env file se API keys (GROQ aur TAVILY) load karne ke liye
 import Groq from 'groq-sdk';
 import { tavily } from '@tavily/core';
+import NodeCache from 'node-cache';
 
+// --- Initialization ---
+
+// Groq SDK client setup
 const client = new Groq({
     apiKey: process.env.GROQ_API_KEY
 });
 
+// Tavily Search API setup
 const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 
+// NodeCache setup: Chat history ko RAM mein save rakhne ke liye
+// stdTTL: 86400 seconds (24 ghante) tak data rahega
+const cache = new NodeCache({ stdTTL: 60 * 60 * 24 });
 
-// Ye main function hai jo user ka message leta hai aur AI se process karwata hai
-export async function generate(userMessage) {
-    const messages = [
+
+//  Main function: User ka message aur session ID (threadId) leta hai
+//  aur AI se process karwa kar final response deta hai.
+
+export async function generate(userMessage, threadId) {
+
+    // System Prompt: AI ki personality aur rules define karta hai
+    const baseMessages = [
         {
             role: "system",
             content: `You are a smart personal assistant.
-                    If you know the answer to a question, answer it directly in plain English.
-                    If the answer requires real-time, local, or up-to-date information, or if you don’t know the answer, use the available tools to find it.
-                    You have access to the following tool:
-                    webSearch(query: string): Use this to search the internet for current or unknown information.
-                    Decide when to use your own knowledge and when to use the tool.
-                    Do not mention the tool unless needed.
-
-                    Examples:
-                    Q: What is the capital of France?
-                    A: The capital of France is Paris.
-
-                    Q: What’s the weather in Karachi right now?
-                    A: (use the search tool to find the latest weather)
-
-                    Q: Who is the Prime Minister of Pakistan?
-                    A: The current Prime Minister of Pakistan is Shehbaz Sharif.
-
-                    Q: Tell me the latest IT news.
-                    A: (use the search tool to get the latest news)
-
-                    current date and time: ${new Date().toUTCString()}`
+                    If you know the answer, answer directly.
+                    If you don't know or need real-time info, use the webSearch tool.
+                    Current date and time: ${new Date().toUTCString()}`
         }
     ];
 
-    // User ka sawal history mein add kiya
+    // 1. Cache se purani history nikaalein, agar nahi hai to baseMessages (System Prompt) use karein
+    const messages = cache.get(threadId) ?? [...baseMessages];
+
+    // 2. User ka naya sawal history array mein add karein
     messages.push({
         role: "user",
         content: userMessage
     });
 
-    // AGENTIC LOOP: Ye loop tab tak chalega jab tak AI final jawab nahi de deta
-    // (Agar AI ko tool chahiye, to wo tool call karega aur phir wapas is loop ke upar ayega)
+    // --- Agentic Loop Configuration ---
+    // Infinite loop se bachne ke liye limit set ki hai (max 10 baar AI tool call kar sakta hai)
+    const MAX_RETRIES = 10;
+    let count = 0;
+
+    /**
+     * AGENTIC LOOP:
+     * Ye loop tab tak chalta hai jab tak AI tool calls khatam karke final jawab na de de.
+     */
     while (true) {
+        // Safe-exit condition
+        if (count > MAX_RETRIES) {
+            return 'I could not find the result, please try again.';
+        }
+        count++;
+
+        // AI Model ko poori history aur tools ki list bhej rahe hain
         const completions = await client.chat.completions.create({
-            model: "openai/gpt-oss-120b",
-            temperature: 0,
+            model: "llama-3.3-70b-versatile",
+            temperature: 0, // Consistent answers ke liye 0 rakha hai
             messages: messages,
             tools: [
                 {
                     type: "function",
                     function: {
                         name: "webSearch",
-                        description: "Search the internet",
+                        description: "Search the internet for real-time or unknown info",
                         parameters: {
                             type: "object",
                             properties: {
                                 query: {
                                     type: "string",
-                                    description: "The search query to perform search on"
+                                    description: "The search query"
                                 },
                             },
                             required: ["query"]
@@ -72,36 +84,34 @@ export async function generate(userMessage) {
                     }
                 }
             ],
-            tool_choice: "auto", // AI khud faisla karega ke internet search karni hai ya nahi
+            tool_choice: "auto", // AI khud decide karega kab search karni hai
         });
 
-        // AI ka response nikaala
         const aiResponse = completions.choices[0].message;
 
-        // AI ka ye response (chahe wo text ho ya tool call) history mein add kiya
+        // AI ka response (text ya tool call) history mein add karein taake AI ko context yaad rahe
         messages.push(aiResponse);
 
-        // Check kiya ke kya AI ne koi tool call kiya hai?
         const toolCalls = aiResponse.tool_calls;
 
-        // CASE A: Agar AI ko tool ki zaroorat NAHI hai (Final Answer mil gaya)
+        // CASE A: Agar AI ne koi tool call nahi kiya (Final Answer mil gaya) ---
         if (!toolCalls) {
-            // Seedha jawab return kar do frontend ko
+            // Final updated history ko cache mein save karein
+            cache.set(threadId, messages);
             return aiResponse.content;
         }
 
-        // CASE B: Agar AI ne Tool Call kiya hai (Matlab usay internet search karni hai)
+        // CASE B: Agar AI ne Tool Call kiya hai (Internet search ki request) ---
         for (const tool of toolCalls) {
             const functionName = tool.function.name;
             const functionParams = tool.function.arguments;
 
             if (functionName === "webSearch") {
-                // AI ke diye huye 'query' argument ko use karke internet search ki
-                // JSON.parse is liye taake string se object ban jaye {query: "..."}
+                // Tool call ke arguments ko parse karke search function chalana
                 const toolResult = await webSearch(JSON.parse(functionParams));
 
-                // Search ka result history mein "tool" role ke sath add kiya
-                // tool_call_id dena zaroori hai taake AI ko pata chale ye kis request ka answer hai
+                // Search ka result "role: tool" ke sath history mein save karna
+                // tool_call_id dena lazmi hai taake AI ko pata chale ye kis request ka result hai
                 messages.push({
                     role: "tool",
                     tool_call_id: tool.id,
@@ -110,21 +120,22 @@ export async function generate(userMessage) {
                 });
             }
         }
-        // Yahan loop khatam nahi hua, balkay wapas upar jayega 
-        // Ab AI ke paas purani history + tool results hain, wo final jawab dega.
+        // Loop dobara chalega aur AI ab search results dekh kar final jawab taiyar karega
     }
 }
 
 
-// Helper function: Tavily API ko call karke results ko text mein badalta hai
+// Helper Function: Tavily API ko call karke search results return karta hai
 
 async function webSearch({ query }) {
-    console.log("🔍 Calling Web Search for:", query);
+    console.log("🔍 Fetching from Web:", query);
 
     const response = await tvly.search(query);
 
-    // Saare search results ka main content nikaal kar aik bara string bana diya
-    const finalResult = response.results.map(result => result.content).join('\n\n');
+    // Saare results ke content ko merge karke aik string banana taake AI asani se parh sake
+    const finalResult = response.results
+        .map(result => `Source: ${result.url}\nContent: ${result.content}`)
+        .join('\n\n');
 
     return finalResult;
 }

@@ -2,6 +2,8 @@ const input = document.getElementById("input")
 const chatContainer = document.querySelector("#chat-container")
 const askBtn = document.querySelector("#ask")
 
+const threadId = Date.now().toString(36) + Math.random().toString(36).substring(2, 8)
+
 
 input.addEventListener("keyup", handleEnter)
 askBtn.addEventListener('click', handleAsk)
@@ -38,7 +40,7 @@ async function callServer(inputText) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ message: inputText })  // Backend 'message' key expect kar raha hai
+        body: JSON.stringify({ threadId: threadId, message: inputText })  // Backend 'message' key expect kar raha hai
     })
 
     if (!response.ok) {
