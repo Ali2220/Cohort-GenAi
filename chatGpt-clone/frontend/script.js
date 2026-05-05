@@ -13,7 +13,7 @@ loading.className = 'my-6 animate-pulse'
 loading.textContent = 'Searching the Web...'
 
 async function generate(text) {
-    // 1. append message to Ui
+    // 1. append user-message to Ui
     // 2. send message to Ai
     // 3. Append ai-response to Ui
     const msg = document.createElement('div')

@@ -44,15 +44,15 @@ export async function generate(userMessage, threadId) {
         content: userMessage
     });
 
-    // --- Agentic Loop Configuration ---
+    // Agentic Loop Configuration
     // Infinite loop se bachne ke liye limit set ki hai (max 10 baar AI tool call kar sakta hai)
     const MAX_RETRIES = 10;
     let count = 0;
 
-    /**
-     * AGENTIC LOOP:
-     * Ye loop tab tak chalta hai jab tak AI tool calls khatam karke final jawab na de de.
-     */
+
+    // AGENTIC LOOP:
+    // Ye loop tab tak chalta hai jab tak AI tool calls khatam karke final jawab na de de.
+
     while (true) {
         // Safe-exit condition
         if (count > MAX_RETRIES) {
