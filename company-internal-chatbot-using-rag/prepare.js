@@ -3,16 +3,16 @@ dotenv.config()
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { GoogleGenAI } from '@google/genai'
-import { Pinecone } from "@pinecone-database/pinecone" 
+import { Pinecone } from "@pinecone-database/pinecone"
 
 export async function indexTheDocument(filePath) {
     try {
-        // --- STEP 1: PDF Loading (via LangChain) ---
+        // STEP 1: PDF Loading (via LangChain) ---
         // { splitPages: false } ka matlab hai ke puri PDF ko aik sath read karna hai
         const loader = new PDFLoader(filePath, { splitPages: false });
         const doc = await loader.load();
 
-        // --- STEP 2: Text Splitting (via LangChain) ---
+        // STEP 2: Text Splitting (via LangChain) ---
         // ChunkSize 500 characters rakhi hai aur overlap 100 characters taake context barkarar rahe
         const textSplitter = new RecursiveCharacterTextSplitter({
             chunkSize: 500,
@@ -39,7 +39,7 @@ export async function indexTheDocument(filePath) {
 
         const vectors = []
 
-        // --- STEP 4: Embedding Generation (Native Google API) ---
+        // STEP 4: Embedding Generation (Native Google API) ---
         // Har chunk ke upar loop chalaya ja raha hai
         for (let i = 0; i < documents.length; i++) {
             let chunk = documents[i].pageContent
@@ -60,14 +60,14 @@ export async function indexTheDocument(filePath) {
             // Pinecone format ke mutabiq object taiyar karna
             vectors.push({
                 id: `doc${i}-${Date.now()}`, // Har chunk ke liye unique ID
-                values: embedding,           // Numerical vector
+                values: embedding, // Numerical vector
                 metadata: {
-                    text: chunk               // Original text save karna taake search result mein dikhaya ja sake
+                    text: chunk  // Original text save karna taake search result mein dikhaya ja sake
                 }
             })
         }
 
-        // --- STEP 5: Vector Upload (Native Pinecone API) ---
+        // STEP 5: Vector Upload (Native Pinecone API) ---
         // Saare vectors ko aik sath Pinecone database mein upload (upsert) karna
         console.log("🚀 Uploading to Pinecone...");
         await index.upsert(vectors)
