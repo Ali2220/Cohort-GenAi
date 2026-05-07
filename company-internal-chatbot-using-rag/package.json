@@ -2,7 +2,7 @@
   "name": "company-internal-chatbot-using-rag",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "prepare.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,9 +11,14 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@langchain/community": "^1.1.28",
-    "@langchain/core": "^1.1.44",
-    "@langchain/textsplitters": "^1.0.1",
-    "pdf-parse": "^2.4.5"
+    "@google/genai": "^1.52.0",
+    "@langchain/community": "0.3.49",
+    "@langchain/core": "0.3.66",
+    "@langchain/pinecone": "0.2.0",
+    "@langchain/textsplitters": "0.1.0",
+    "@pinecone-database/pinecone": "^6.1.2",
+    "dotenv": "16.6.1",
+    "groq-sdk": "0.29.0",
+    "pdf-parse": "1.1.1"
   }
 }
