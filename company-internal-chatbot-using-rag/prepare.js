@@ -23,7 +23,7 @@ export async function indexTheDocument(filePath) {
         const documents = await textSplitter.splitDocuments(doc);
         console.log(`Total chunks created: ${documents.length}`);
 
-        // --- STEP 3: Clients Initialization (Native SDKs) ---
+        // STEP 3: Clients Initialization (Native SDKs) ---
         // Google GenAI client initialize ho raha hai
         const genAi = new GoogleGenAI({
             apiKey: process.env.GEMINI_API_KEY
