@@ -5,6 +5,8 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { TavilySearch } from "@langchain/tavily";
 import { tool } from '@langchain/core/tools';
 import * as z from "zod";
+import * as fs from "node:fs/promises";
+import readLine from 'node:readline/promises'
 
 async function main() {
 
@@ -53,24 +55,44 @@ async function main() {
         tools: [search, calendarTool],
     })
 
-    // STEP 4: Invocation (Sawal Poochna)
-    const result = await agent.invoke({
-        messages: [
-            {
-                role: "system",
-                content: `You are a helpful assistant. Use provided tools (search, calendarTool) if needed, else directly answer me if you have the information.
+    const rl = readLine.createInterface({ input: process.stdin, output: process.stdout })
+
+    while (true) {
+        const question = await rl.question("User: ")
+
+        if (question.toLowerCase() === "exit") {
+            break
+        }
+
+
+        // STEP 4: Invocation (Sawal Poochna)
+        const result = await agent.invoke({
+            messages: [
+                {
+                    role: "system",
+                    content: `You are a helpful assistant. Use provided tools (search, calendarTool) if needed, else directly answer me if you have the information.
                 Date: ${new Date().toUTCString()}
                 `
-            },
-            {
-                role: "human",
-                content: "Do I have meeting tomorrow ?"
-            }
-        ]
-    })
+                },
+                {
+                    role: "human",
+                    content: question
+                }
+            ],
+        })
 
-    // Hum sirf aakhri message (Assistant ka final answer) print kar rahe hain.
-    console.log(result.messages[result.messages.length - 1].content);
+        console.log("Assistant: ",result.messages[result.messages.length - 1].content);
+
+    }
+
+    rl.close()
+
+    const drawableGraph = await agent.getGraphAsync();
+    const image = await drawableGraph.drawMermaidPng();
+    const imageBuffer = new Uint8Array(await image.arrayBuffer());
+
+    await fs.writeFile("graph.png", imageBuffer);
+
 }
 
 main()
