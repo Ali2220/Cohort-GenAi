@@ -98,8 +98,8 @@ async function main() {
     const drawableGraph = await agent.getGraphAsync();
     const image = await drawableGraph.drawMermaidPng();
     const imageBuffer = new Uint8Array(await image.arrayBuffer());
-    await fs.writeFile("graph.png", imageBuffer);
-    console.log("Graph visualization saved as graph.png");
+    await fs.writeFile("agent.png", imageBuffer);
+    console.log("Graph visualization saved as agent.png");
 }
 
 main()
