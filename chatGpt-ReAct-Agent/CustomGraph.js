@@ -2,11 +2,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { tool } from '@langchain/core/tools';
 import { ChatGroq } from '@langchain/groq';
-import { StateGraph, MessagesAnnotation, END, START } from '@langchain/langgraph';
+import { StateGraph, MessagesAnnotation, END, START, MemorySaver } from '@langchain/langgraph';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { TavilySearch } from '@langchain/tavily';
 import * as z from 'zod';
 import fs from "node:fs/promises"
+import readLine from "node:readline/promises"
 
 // 1. TOOLS (Haath)
 // Internet search tool
@@ -63,6 +64,9 @@ async function callModel(state) {
     return { messages: [response] };
 }
 
+// Memory Saver
+const checkPointer = new MemorySaver()
+
 // 5. CONDITIONAL ROUTING
 function shouldContinue(state) {
     const lastMessage = state.messages[state.messages.length - 1];
@@ -88,7 +92,7 @@ const graph = new StateGraph(MessagesAnnotation)
     })
     .addEdge('tools', 'llm');
 
-const agent = graph.compile();
+const agent = graph.compile({ checkpointer: checkPointer });
 
 // 7. RUN KARO
 async function main() {
@@ -100,22 +104,36 @@ async function main() {
     await fs.writeFile("graph.png", imageBuffer);
     console.log("Success: Graph visualization saved as graph.png");
 
-    // result
-    const result = await agent.invoke({
-        messages: [
-            {
-                role: 'system',
-                content: `You are a helpful assistant. Today's date is ${new Date().toUTCString()}.`,
-            },
-            {
-                role: 'human',
-                content: 'is there any meeting today?',
-            },
-        ],
-    });
+    // user input
+    const rl = readLine.createInterface({ input: process.stdin, output: process.stdout })
+    while (true) {
 
-    // Last message assistant ka final jawab hota hai
-    console.log('AI:', result.messages[result.messages.length - 1].content);
+        const question = await rl.question("UserInput: ")
+
+        if (question.toLowerCase() === 'exit') {
+            break;
+        }
+
+        const result = await agent.invoke(
+            {
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are a helpful assistant. Today's date is ${new Date().toUTCString()}.`,
+                    },
+                    {
+                        role: 'human',
+                        content: question,
+                    },
+                ],
+            },
+            { configurable: { thread_id: 'user-123' } }
+        );
+
+        // Last message assistant ka final jawab hota hai
+        console.log('AI:', result.messages[result.messages.length - 1].content);
+    }
+    rl.close()
 }
 
 main();
