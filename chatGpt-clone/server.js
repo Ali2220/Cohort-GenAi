@@ -1,7 +1,8 @@
 import express from "express";
 const app = express()
-import { generate } from './chatbot.js'
+// import { generate } from './chatbot.js'
 import cors from 'cors'
+import {generate} from './graph.js'
 
 app.use(express.json())
 app.use(cors())
@@ -11,15 +12,15 @@ app.get('/', (req, res) => {
 })
 
 app.post('/chat', async (req, res) => {
-    const { message, threadId } = req.body
+    const { message} = req.body
 
-    if (!message || !threadId) {
+    if (!message) {
         return res.status(400).json({
             message: "All fields are required"
         })
     }
 
-    const result = await generate(message, threadId)
+    const result = await generate(message)
 
     res.json({ message: result })
 })
