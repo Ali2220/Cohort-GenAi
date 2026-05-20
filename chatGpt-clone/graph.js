@@ -39,7 +39,6 @@ async function agentNode(state) {
 
 const toolNode = new ToolNode([searchTool])
 
-// FIX: 'state' parameter add kiya gaya hai
 function shouldContinue(state) {
     const lastMessage = state.messages[state.messages.length - 1]
 
