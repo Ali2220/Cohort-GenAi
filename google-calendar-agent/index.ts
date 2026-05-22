@@ -56,7 +56,7 @@ async function main() {
         messages: [
             {
                 role: 'human',
-                content: 'Please create the meeting for tomorrow with umer at 2 pm at johar'
+                content: 'Do i have any meetings in the upcoming 7 days ?'
             }
         ]
     })
