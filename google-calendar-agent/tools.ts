@@ -66,42 +66,55 @@ export const getEvents = tool(
 export const createEvent = tool(
   async ({ summary, location, startTime, endTime, attendees }) => {
     try {
-      // AI se aane wale simple email strings ko Google ke expected format [{ email: '...' }] mein convert karna
+      // 1. DATA MAPPING: AI se aane wale simple email arrays (e.g., ['umer@gmail.com']) ko
+      // Google ke expected format [{ email: 'umer@gmail.com' }] mein convert karna.
+      // Agar attendees nahi bheje gaye, to isay undefined chor dein ge.
       const formattedAttendees = attendees
         ? attendees.map((email) => ({ email: email }))
         : undefined;
 
+      // 2. REQUEST BODY: Google Calendar API ke mutabiq event ka poora structure (object) taiyar karna
       const event = {
-        summary: summary,
-        location: location,
+        summary: summary, // Meeting ka title ya topic
+        location: location, // Meeting ki jagah (agar physical location ho)
+        // Shuru hone ka waqt aur local timezone setting
         start: { dateTime: startTime, timeZone: "Asia/Karachi" },
+        // Khatam hone ka waqt aur local timezone setting
         end: { dateTime: endTime, timeZone: "Asia/Karachi" },
-        attendees: formattedAttendees,
+        attendees: formattedAttendees, // Tayyar kiye gaye guests ki list
+
+        // 3. GOOGLE MEET SETUP: Google Meet link generate karne ki request dalna
         conferenceData: {
           createRequest: {
-            requestId: `meet-${Date.now()}`, // Ek unique string hona zaroori hai
-            conferenceSolutionKey: { type: "hangoutsMeet" }, // 'hangoutsMeet' se Google Meet link banta hai
+            requestId: `meet-${Date.now()}`, // Har meeting ke liye ek unique string hona zaroori hai (isliye timestamp lagaya)
+            conferenceSolutionKey: { type: "hangoutsMeet" }, // 'hangoutsMeet' batata hai ke humein Google Meet ka link chahiye
           },
         },
       };
 
+      // 4. API CALL: Google Calendar API ko request bhejna event insert karne ke liye
       const response = await calendar.events.insert({
-        calendarId: "primary",
-        sendUpdates: "all",
-        conferenceDataVersion: 1,
-        requestBody: event,
+        calendarId: "primary", // User ka main default calendar select kiya hai
+        sendUpdates: "all", // Sabhi attendees/guests ko automatic email invitation aur links chale jayein
+        conferenceDataVersion: 1, // Isay '1' rakhna lazmi hai taake upar wala Google Meet ka link ban sake
+        requestBody: event, // Jo event object humne upar banaya tha wo yahan pass kar diya
       });
 
+      // Agar event bina kisi rukawat ke ban jaye to AI model ko success message bhejna
       return `Event created successfully!`;
     } catch (error) {
+      // Agar API block ho, token ka masla ho ya time format galat ho, to error console par show karna
       console.error("Error creating event:", error);
       return "Failed to create event. Please check permissions or data format.";
     }
   },
   {
     name: "create-event",
+    // DESCRIPTION: AI Agent (LLM) ko samjhane ke liye instruction ke yeh tool kab aur kis context mein chalana hai
     description:
       "Call to create a new calendar event or meeting. You MUST provide startTime and endTime in strict ISO format.",
+
+    // VALIDATION SCHEMA: Yeh Zod schema AI ko strict limits deta hai ke user ki chat se kya data nikal kar tool ko bhejna hai
     schema: z.object({
       summary: z
         .string()
@@ -120,7 +133,6 @@ export const createEvent = tool(
         .describe(
           "End time strictly in local ISO format with Karachi offset (e.g., '2026-05-24T18:00:00+05:00') or without any timezone letter at the end. DO NOT append 'Z'.",
         ),
-      // Zod schema mein array of strings add kar diya jo optional hai
       attendees: z
         .array(z.string())
         .optional()
