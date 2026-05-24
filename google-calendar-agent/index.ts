@@ -4,6 +4,7 @@ import { ChatGroq } from "@langchain/groq";
 import { createEvent, getEvents } from "./tools.js";
 import {
   END,
+  MemorySaver,
   MessagesAnnotation,
   START,
   StateGraph,
@@ -19,6 +20,8 @@ const model = new ChatGroq({
   model: "openai/gpt-oss-120b",
   temperature: 0,
 }).bindTools(tools);
+
+const checkPointer = new MemorySaver();
 
 // Assistant Node
 async function callModel(state: typeof MessagesAnnotation.State) {
@@ -53,7 +56,7 @@ const graph = new StateGraph(MessagesAnnotation)
   })
   .addEdge("tools", "assistant");
 
-const app = graph.compile();
+const app = graph.compile({ checkpointer: checkPointer });
 
 async function main() {
   const rl = readLine.createInterface({
@@ -72,23 +75,28 @@ async function main() {
       timeZone: "Asia/Karachi",
     });
 
-    const result = await app.invoke({
-      messages: [
-        {
-          role: "system",
-          content: `You are a professional calendar assistant for a user in Pakistan.
+    const result = await app.invoke(
+      {
+        messages: [
+          {
+            role: "system",
+            content: `You are a professional calendar assistant for a user in Pakistan.
             CRITICAL CONTEXT:
             - Current Date and Time: ${currentDateTime}
             - User Timezone: Asia/Karachi (UTC+05:00)
             
             When parsing relative times like 'tomorrow', 'next Friday', or hours like '5pm', calculate them strictly based on the Current Date and Time provided above.`,
-        },
-        {
-          role: "human",
-          content: question,
-        },
-      ],
-    });
+          },
+          {
+            role: "human",
+            content: question,
+          },
+        ],
+      },
+      {
+        configurable: { thread_id: "user-123" },
+      },
+    );
 
     console.log(result.messages[result.messages.length - 1]?.content);
   }
