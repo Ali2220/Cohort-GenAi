@@ -100,17 +100,14 @@ export const createEvent = tool(
         requestBody: event, // Jo event object humne upar banaya tha wo yahan pass kar diya
       });
 
-      // Agar event bina kisi rukawat ke ban jaye to AI model ko success message bhejna
       return `Event created successfully!`;
     } catch (error) {
-      // Agar API block ho, token ka masla ho ya time format galat ho, to error console par show karna
       console.error("Error creating event:", error);
       return "Failed to create event. Please check permissions or data format.";
     }
   },
   {
     name: "create-event",
-    // DESCRIPTION: AI Agent (LLM) ko samjhane ke liye instruction ke yeh tool kab aur kis context mein chalana hai
     description:
       "Call to create a new calendar event or meeting. You MUST provide startTime and endTime in strict ISO format.",
 

@@ -10,6 +10,7 @@ import {
 } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import type { AIMessage } from "@langchain/core/messages";
+import readLine from "node:readline/promises";
 
 const tools: any = [createEvent, getEvents];
 
@@ -55,30 +56,44 @@ const graph = new StateGraph(MessagesAnnotation)
 const app = graph.compile();
 
 async function main() {
-  const currentDateTime = new Date().toLocaleString("en-US", {
-    timeZone: "Asia/Karachi",
+  const rl = readLine.createInterface({
+    input: process.stdin,
+    output: process.stdout,
   });
 
-  const result = await app.invoke({
-    messages: [
-      {
-        role: "system",
-        content: `You are a professional calendar assistant for a user in Pakistan.
+  while (true) {
+    const question = await rl.question("User-Query: ");
+
+    if (question.toLowerCase() === "exit") {
+      break;
+    }
+
+    const currentDateTime = new Date().toLocaleString("en-US", {
+      timeZone: "Asia/Karachi",
+    });
+
+    const result = await app.invoke({
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional calendar assistant for a user in Pakistan.
             CRITICAL CONTEXT:
             - Current Date and Time: ${currentDateTime}
             - User Timezone: Asia/Karachi (UTC+05:00)
             
             When parsing relative times like 'tomorrow', 'next Friday', or hours like '5pm', calculate them strictly based on the Current Date and Time provided above.`,
-      },
-      {
-        role: "human",
-        content:
-          "Create a meeting with Umer and Ali at 7pm at gulshan tommorrow. Umer email: umer@gmail.com, ali email: alisarwar0277@gmail.com",
-      },
-    ],
-  });
+        },
+        {
+          role: "human",
+          content: question,
+        },
+      ],
+    });
 
-  console.log(result.messages[result.messages.length - 1]?.content);
+    console.log(result.messages[result.messages.length - 1]?.content);
+  }
+
+  rl.close();
 }
 
 main();
