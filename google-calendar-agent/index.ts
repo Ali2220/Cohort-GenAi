@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { ChatGroq } from "@langchain/groq";
-import { createEvent, getEvents } from "./tools.js";
+import { createEvent, getEvents, deleteEvent, updateEvent } from "./tools.js";
 import {
   END,
   MemorySaver,
@@ -13,7 +13,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import type { AIMessage } from "@langchain/core/messages";
 import readLine from "node:readline/promises";
 
-const tools: any = [createEvent, getEvents];
+const tools: any = [createEvent, getEvents, deleteEvent, updateEvent];
 
 const model = new ChatGroq({
   apiKey: process.env.GROQ_API_KEY as string,
