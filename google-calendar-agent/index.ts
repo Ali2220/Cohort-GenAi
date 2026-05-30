@@ -105,6 +105,7 @@ async function main() {
         configurable: { thread_id: "user-123" },
         // Yeh line aapke agent ko langfuse dashboard ke sath connect kar degi taake aap har ek step ko visualize kar sakein
         callbacks: [langfuseHandler],
+        // langfuse mein session bnaya hai.
         metadata: { langfuseSessionId: "user-123"},
       },
     );
