@@ -12,6 +12,14 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import type { AIMessage } from "@langchain/core/messages";
 import readLine from "node:readline/promises";
+import { CallbackHandler } from "langfuse-langchain";
+
+// Langfuse handler banaya hai.
+const langfuseHandler = new CallbackHandler({
+  publicKey: process.env.LANGFUSE_PUBLIC_KEY as string,
+  secretKey: process.env.LANGFUSE_SECRET_KEY as string,
+  baseUrl: "http://localhost:3000",
+});
 
 const tools: any = [createEvent, getEvents, deleteEvent, updateEvent];
 
@@ -95,6 +103,9 @@ async function main() {
       },
       {
         configurable: { thread_id: "user-123" },
+        // Yeh line aapke agent ko langfuse dashboard ke sath connect kar degi taake aap har ek step ko visualize kar sakein
+        callbacks: [langfuseHandler],
+        metadata: { langfuseSessionId: "user-123"},
       },
     );
 
