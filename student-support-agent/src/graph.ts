@@ -1,23 +1,21 @@
 import { StateGraph } from '@langchain/langgraph'
 import { StateAnnotation } from './state.js'
 import { model } from './model.js'
-import { json } from 'node:stream/consumers'
 
 /**
- * Front Desk Support Node Function
- * Yeh function student ke sawal ka jawab bhi deta hai aur background mein 
+ * Yeh Node student ke sawal ka jawab bhi deta hai aur background mein 
  * faisla bhi karta hai ke baat ko kisi aur department mein transfer karna hai ya nahi.
  */
 async function frontDeskSupport(state: typeof StateAnnotation.State) {
-    
+
     // 1. Frontdesk Agent ka main system prompt (Guidelines aur Rules)
     const SYSTEM_PROMPT = `You are a frontline support staff for Systems Limited, an Ed-tech company that helps software developers excel in their careers through practical web development and Generative AI courses.
 
 Guidelines:
 - Be concise and professional in your responses.
 - You can chat with students and help them with basic/general questions (like greetings or general info).
-- If the student has a MARKETING query (promo codes, discounts, offers, and special campaigns), DO NOT answer directly. Ask the user to hold for a moment while you transfer them to Marketing Team.
-- If the student has a LEARNING support query (courses, syllabus coverage, learning paths, and study strategies), DO NOT answer directly. Ask the user to hold for a moment while you transfer them to Learning support Team.`
+- If the student has a MARKETING query (promo codes, discounts, offers, and special campaigns, etc), DO NOT answer directly. Ask the user to hold for a moment while you transfer them to Marketing Team.
+- If the student has a LEARNING support query (courses, syllabus coverage, learning paths, and study strategies, etc), DO NOT answer directly. Ask the user to hold for a moment while you transfer them to Learning support Team.`
 
     // First Model Call: Student ke liye aam zuban mein reply generate karna
     const supportResponse = await model.invoke([
@@ -49,7 +47,11 @@ Guidelines:
             content: CATEGORIZATION_SYSTEM_PROMPT
         },
         ...state.messages, // Purani chat history 
-        
+
+        // Frontdesk ka jo naya reply upar generate hua tha, wo yahan pass karna 
+        // lazmi hai taake router dekh sake ke representative ne transfer karne ka bola hai ya nahi.
+        supportResponse,
+
         {
             role: 'human',
             content: CATEGORIZATION_HUMAN_PROMPT
@@ -71,17 +73,32 @@ Guidelines:
         messages: [supportResponse],
         nextRepresentative: categorizationOutput.nextRepresentative
     }
+
 }
 
 
 async function marketingSupport(state: typeof StateAnnotation.State) {
+    console.log("marketing team support!");
     return state
 }
 
 async function learningSupport(state: typeof StateAnnotation.State) {
+    console.log("learning Team support!");
     return state
 }
 
+function routingFunction(state: typeof StateAnnotation.State) {
+    if (state.nextRepresentative.includes("MARKETING")) {
+        return 'marketingSupport'
+    } else if (state.nextRepresentative.includes("LEARNING")) {
+        return 'learningSupport'
+    } else if (state.nextRepresentative.includes('RESPOND')) {
+        return "__end__"
+    } else {
+        return "__end__"
+    }
+
+}
 
 // build graph and add nodes
 const graph = new StateGraph(StateAnnotation)
@@ -91,3 +108,33 @@ const graph = new StateGraph(StateAnnotation)
 
     // Edges
     .addEdge('__start__', 'frontDeskSupport')
+    .addConditionalEdges('frontDeskSupport', routingFunction, {
+        marketingSupport: 'marketingSupport',
+        learningSupport: "learningSupport",
+        "__end__": "__end__"
+    })
+    .addEdge('marketingSupport', "__end__")
+    .addEdge('learningSupport', '__end__')
+
+const app = graph.compile()
+
+// invoke
+
+async function main() {
+    const stream = await app.stream({
+        messages: [
+            {
+                role: 'human',
+                content: 'Hi tell me about sales on any course'
+            }
+        ]
+    })
+
+    for await (const value of stream) {
+        console.log("----Steps----");
+        console.log(value);
+        console.log("----Steps----");
+    }
+}
+
+main()

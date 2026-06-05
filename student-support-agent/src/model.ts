@@ -1,3 +1,5 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import { ChatGroq } from "@langchain/groq"
 
 export const model = new ChatGroq({
