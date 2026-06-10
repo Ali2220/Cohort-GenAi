@@ -5,6 +5,7 @@ import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
 import { GoogleGenAI } from "@google/genai"
 import { Pinecone } from '@pinecone-database/pinecone'
 
+
 async function processAndUpsertPDF() {
     // 1. PDF Load and Read
     const loader = new PDFLoader('./company-docs-formatted.pdf', { splitPages: false })
@@ -42,7 +43,7 @@ async function processAndUpsertPDF() {
                 contents: {
                     parts: [{ text: chunk }]
                 },
-                config: {outputDimensionality: 768}
+                config: { outputDimensionality: 768 }
             })
 
             const embedding = response.embeddings?.[0]?.values
@@ -72,4 +73,4 @@ async function processAndUpsertPDF() {
     }
 }
 
-processAndUpsertPDF();
+// processAndUpsertPDF();
