@@ -7,7 +7,7 @@ import type { AIMessage } from '@langchain/core/messages'
 
 // TOOLS CONFIGURATION 
 // Marketing Tools
-const marketingTools = [getOffers]
+const marketingTools = [getOffers, retrieve_data]
 const marketingToolNode = new ToolNode(marketingTools)
 
 // Learning Tools
@@ -106,8 +106,10 @@ async function marketingSupport(state: typeof StateAnnotation.State) {
     const systemPrompt = `You are an enthusiastic Marketing Support Specialist for Systems Limited (Web Dev & Gen AI courses). Your job is to assist students with fees, discounts, promos, and installments.
 
 Rules:
-- Tool Usage: Always use tools to fetch live data for any price or discount query. Never guess or hallucinate codes.
-- Grounded Answers: Base your response strictly on retrieved tool data. If tools lack information, politely transfer to a human representative.
+- TOOL USAGE LIMIT: Always use tools to fetch live data.
+- 🛑 CRITICAL VERIFICATION: If a user asks for a discount on a SPECIFIC course (like "Rust", "Python", "React"), you MUST FIRST call the 'retrieve_data' tool to check if we actually offer that course.
+- NO HALLUCINATION: If 'retrieve_data' returns that the course is not found, DO NOT offer them a discount. Politely inform them that we currently do not offer that specific course.
+- If the course is verified to exist, call 'getOffers' to get the promo codes and provide them enthusiastically.
 - Tone & Style: Be persuasive, energetic, and natural. Never mention tools, databases, or background searches to the user; just deliver the facts smoothly.`
 
     /**
@@ -162,18 +164,22 @@ Rules:
 // NODE 3: LEARNING SUPPORT
 async function learningSupport(state: typeof StateAnnotation.State) {
     console.log("🧠 Learning Team Support Node Activated!");
-    const SYSTEM_PROMPT = `You are an expert Learning Support Assistant. Your primary goal is to help users understand complex concepts, answer their queries, and provide accurate learning materials.
+    const SYSTEM_PROMPT = `You are an expert Learning Support Assistant for Systems Limited. Your primary goal is to help users with course-related queries based ONLY on verified data returned by tools.
 
 To fulfill your role, you have access to the 'retrieve_data' tool. Follow these strict operational guidelines:
 
-1. TOOL USAGE LIMIT: If the user's query requires external knowledge, call the 'retrieve_data' tool.
-2. RELEVANCY CHECK & RETRIES: 
-   - Evaluate the tool's output carefully.
-   - If the data returned by 'retrieve_data' is NOT relevant to the user's query, you may refine your search parameters and try again.
-   - MAXIMUM LIMIT: You are strictly allowed to call the 'retrieve_data' tool a MAXIMUM OF 3 TIMES if the results keep coming up irrelevant.
-3. FALLBACK: If after 3 attempts you still cannot find relevant data, DO NOT call the tool again. Instead, politely inform the user that you couldn't retrieve the exact data, and answer their query to the best of your existing knowledge or guide them on next steps.
+1. TOOL USAGE LIMIT: If the user's query requires external knowledge or course details, call the 'retrieve_data' tool.
+2. 🛑 STRICT RELEVANCY & KEYWORD CHECK:
+   - When a user asks about a specific course, topic, or language (e.g., "Rust", "Python"), you MUST check if that exact keyword/language name exists in the text returned by 'retrieve_data'.
+   - CRITICAL: If the tool output describes a course but DOES NOT explicitly mention the requested language ("Rust"), do NOT assume it is relevant. Do NOT map your internal knowledge to the modules mentioned in the tool. Treat it as IRRELEVANT.
+3. RETRIES:
+   - If the data returned is not relevant or doesn't mention the requested topic, you may refine your queryText (e.g., search just the keyword "Rust") and try again.
+   - MAXIMUM LIMIT: You can call 'retrieve_data' a MAXIMUM OF 3 TIMES.
+4. FALLBACK (NO HALLUCINATION):
+   - If after 3 attempts you cannot find text that explicitly mentions the requested course, DO NOT invent a syllabus, modules, or details.
+   - Politely inform the user that Systems Limited currently does not offer that specific course, and list the actual courses visible in the context if any (like Web Development or Generative AI).
 
-Tone: Keep your responses highly encouraging, clear, educational, and structured for easy learning.`
+Tone: Keep your responses highly encouraging, clear, educational, and strictly honest based on provided data.`
 
     let trimmedHistory = state.messages
 
@@ -285,7 +291,7 @@ async function main() {
         messages: [
             {
                 role: 'human',
-                content: 'In which language gen-ai course is taught ?'
+                content: 'hey! can you please tell me about the rust course.'
             }
         ]
     });

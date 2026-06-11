@@ -14,17 +14,22 @@ export const getOffers = tool(
         return JSON.stringify([
             {
                 code: 'LAUNCH',
-                discount_percent: 30
+                discount_percent: 30,
+                valid_for: 'All Active Courses'
             },
             {
                 code: 'FIRST_20',
-                discount_percent: 30
+                discount_percent: 30,
+                valid_for: "All Active Courses"
             }
         ])
     },
     {
         name: 'getOffers',
-        description: 'Call this tool to get the available discounts and offers',
+        description: 'Call this tool to get the available discounts, promo-codes and offers',
+        schema: z.object({
+            
+        })
     }
 )
 
