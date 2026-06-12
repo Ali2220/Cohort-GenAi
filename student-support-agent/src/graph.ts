@@ -1,9 +1,12 @@
-import { StateGraph } from '@langchain/langgraph'
+import { StateGraph, MemorySaver } from '@langchain/langgraph'
 import { StateAnnotation } from './state.js'
 import { model } from './model.js'
 import { ToolNode } from "@langchain/langgraph/prebuilt"
 import { getOffers, retrieve_data } from './tools.js'
 import type { AIMessage } from '@langchain/core/messages'
+import readLine from 'node:readline/promises'
+
+const checkpointer = new MemorySaver()
 
 // TOOLS CONFIGURATION 
 // Marketing Tools
@@ -281,37 +284,44 @@ const graph = new StateGraph(StateAnnotation)
     .addEdge('marketingTools', 'marketingSupport')
 
 // Graph compile ho kar execution ke liye tayar hai
-const app = graph.compile()
+const app = graph.compile({ checkpointer })
 
 
 //  MAIN EXECUTION (RUNNING THE GRAPH)
 async function main() {
-    // User ka coupon/discount ka input bhej kar graph stream start ki
-    const stream = await app.stream({
-        messages: [
-            {
-                role: 'human',
-                content: 'hey! can you please tell me about the rust course.'
-            }
-        ]
-    });
 
-    /**
-     * Stream ka Loop: Har node jab apna kaam khatam karega, uska output screen par print hoga.
-     * * @variable value (Object)
-     * Example of chunk printed in loop:
-     * {
-     * frontDeskSupport: {
-     * messages: [ AIMessage { content: 'Please hold...' } ],
-     * nextRepresentative: 'MARKETING'
-     * }
-     * }
-     */
-    for await (const value of stream) {
-        console.log("----Steps----");
-        console.log(value);
-        console.log("----Steps----");
+    const rl = readLine.createInterface({ input: process.stdin, output: process.stdout })
+
+    while (true) {
+        const question = await rl.question("User Query: ")
+
+        if (question.toLowerCase() === "exit") {
+            break
+        }
+
+
+        const result = await app.invoke(
+            {
+                messages: [
+                    {
+                        role: 'human',
+                        content: question
+                    }
+                ]
+            },
+            {
+                configurable: { thread_id: '1' }
+            }
+
+        );
+
+
+        console.log("Assistant: ", result.messages[result.messages.length - 1]?.content);
+
     }
+
+    rl.close()
+
 }
 
 main()
