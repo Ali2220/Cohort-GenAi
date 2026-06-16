@@ -6,5 +6,6 @@ export const StateAnnotation = Annotation.Root({
     ...MessagesAnnotation.spec,
     
     // custom state
-    nextRepresentative: Annotation<string>
+    nextRepresentative: Annotation<string>,
+    summary: Annotation<string>
 });

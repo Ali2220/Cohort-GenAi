@@ -1,173 +1,150 @@
-import { StateGraph, MemorySaver } from '@langchain/langgraph'
-import { StateAnnotation } from './state.js'
-import { model } from './model.js'
-import { ToolNode } from "@langchain/langgraph/prebuilt"
-import { getOffers, retrieve_data } from './tools.js'
-import type { AIMessage } from '@langchain/core/messages'
-import readLine from 'node:readline/promises'
+import { StateGraph, MemorySaver } from "@langchain/langgraph";
+import { StateAnnotation } from "./state.js";
+import { model } from "./model.js";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { getOffers, retrieve_data } from "./tools.js";
+import { RemoveMessage, type AIMessage } from "@langchain/core/messages";
+import readLine from "node:readline/promises";
+import { pathToFileURL } from "node:url";
 
-const checkpointer = new MemorySaver()
+// ==========================================
+// 🧠 MEMORY & TOOLS CONFIGURATION
+// ==========================================
 
-// TOOLS CONFIGURATION 
-// Marketing Tools
-const marketingTools = [getOffers, retrieve_data]
-const marketingToolNode = new ToolNode(marketingTools)
+// MemorySaver instance chat history aur threads (sessions) ko save rakhne ke liye use hota hai
+const checkpointer = new MemorySaver();
 
-// Learning Tools
-const learningTools = [retrieve_data]
-const learningToolNode = new ToolNode(learningTools)
+// Marketing Team ke tools define kiye aur unhe LangGraph ke prebuilt ToolNode mein register kiya
+const marketingTools = [getOffers, retrieve_data];
+const marketingToolNode = new ToolNode(marketingTools);
 
-// NODE 1: FRONT DESK SUPPORT
+// Learning Team ke paas sirf vector database (Pinecone) se data read karne ka tool hai
+const learningTools = [retrieve_data];
+const learningToolNode = new ToolNode(learningTools);
+
+// ==========================================
+// 🛎️ NODE 1: FRONT DESK SUPPORT
+// ==========================================
 async function frontDeskSupport(state: typeof StateAnnotation.State) {
-    console.log("🛎️ Front Desk Support Node Triggered!");
+  console.log("🛎️ Front Desk Support Node Triggered!");
 
-    // Guidelines jo model ko batati hain ke kab baat khud karni hai aur kab transfer karni hai.
-    const SYSTEM_PROMPT = `You are a frontline support staff for Systems Limited, an Ed-tech company that helps software developers excel in their careers through practical web development and Generative AI courses.
+  // System Prompt jo model ko batata hai ke uski basic aur core guidelines kya hain
+  // Agar state mein pehle se bani koi 'summary' mojud hai, toh use yahan inject kar diya jata hai
+  const SYSTEM_PROMPT = `You are a frontline support staff for Systems Limited... [Your existing description].
 
+    ${state.summary ? `\n🧠 PREVIOUS CHAT SUMMARY: ${state.summary}` : ""}
+    
 Guidelines:
 - Be concise and professional in your responses.
-- You can chat with students and help them with basic/general questions (like greetings or general info).
-- If the student has a MARKETING query (promo codes, discounts, offers, and special campaigns, etc), DO NOT answer directly. Ask the user to hold for a moment while you transfer them to Marketing Team.
-- If the student has a LEARNING support query (courses, syllabus coverage, learning paths, and study strategies, etc), DO NOT answer directly. Ask the user to hold for a moment while you transfer them to Learning support Team.`
+- If the student has a MARKETING query... (Transfer to Marketing)
+- If the student has a LEARNING support query... (Transfer to Learning)`;
 
+  // First LLM Call: User ko basic ya welcoming reply dene ke liye
+  const supportResponse = await model.invoke([
+    {
+      role: "system",
+      content: SYSTEM_PROMPT,
+    },
+    ...state.messages, // Puraane saare chat messages history ke taur par pass kiye
+  ]);
 
-    const supportResponse = await model.invoke([
-        {
-            role: "system",
-            content: SYSTEM_PROMPT
-        },
-        ...state.messages // Purani sari history
-    ])
+  // Router Agent (Backend Classifier) ka system prompt jo customer ki category nikalta hai
+  const CATEGORIZATION_SYSTEM_PROMPT = `You are an expert customer support routing system.
+    Your job is to detect whether a customer support representative is routing a user to a marketing team or learning support team, or if they are just responding conversationally.`;
 
-    // Router Agent ka System Prompt (Jo sirf backend par routing ka faisla karega)
-    const CATEGORIZATION_SYSTEM_PROMPT = `You are an expert customer support routing system.
-    Your job is to detect whether a customer support representative is routing a user to a marketing team or learning support team, or if they are just responding conversationally.`
-
-    // Router ko instructions di ja rahi hain ke JSON output generate kare
-    const CATEGORIZATION_HUMAN_PROMPT = `The previous conversation is an interaction between a customer support representative and a user. Extract, whether the representative is routing the user to a marketing team or learning support team, or whether they are just responding occasionally.
+  // Router ko JSON pattern enforce karne ke liye strict instructions
+  const CATEGORIZATION_HUMAN_PROMPT = `The previous conversation is an interaction between a customer support representative and a user. Extract, whether the representative is routing the user to a marketing team or learning support team, or whether they are just responding occasionally.
     Responding with a JSON object containing a single key called "nextRepresentative" with one of the following values:
 
     If they want to route the user to the marketing team, respond with "MARKETING".
     If they want to route the user to the learning support team, respond with "LEARNING".
-    Otherwise, respond only with the word "RESPOND"`
+    Otherwise, respond only with the word "RESPOND"`;
 
-    /**
-     * Second Model Call: Faisla karne ke liye ke aage kahan jana hai.
-     * * @variable categorizationResponse (AIMessage Object containing JSON string)
-     * Example Structure:
-     * AIMessage {
-     * content: '{"nextRepresentative": "MARKETING"}',
-     * response_metadata: { ... }
-     * }
-     */
-    const categorizationResponse = await model.invoke([
-        {
-            role: 'system',
-            content: CATEGORIZATION_SYSTEM_PROMPT
-        },
-        ...state.messages,
-        supportResponse, // Frontdesk ka naya reply bhi pass kiya taake router dekh sake ke kya transfer ka bola gaya hai
-        {
-            role: 'human',
-            content: CATEGORIZATION_HUMAN_PROMPT
-        }
+  // Second LLM Call: Yeh call user ko dikhane ke liye nahi hai, yeh sirf system routing ka faisla karti hai
+  const categorizationResponse = await model.invoke(
+    [
+      {
+        role: "system",
+        content: CATEGORIZATION_SYSTEM_PROMPT,
+      },
+      ...state.messages,
+      supportResponse, // Front Desk ka abhi ka taza reply bhi pass kiya taake context breakdown na ho
+      {
+        role: "human",
+        content: CATEGORIZATION_HUMAN_PROMPT,
+      },
     ],
-        {
-            response_format: {
-                type: 'json_object' // Model ko force kiya ke sirf valid JSON de
-            }
-        }
-    )
+    {
+      response_format: {
+        type: "json_object", // Model ko bound kiya ke output strictly valid JSON format mein ho
+      },
+    },
+  );
 
-    /**
-     * JSON string ko JavaScript Object mein convert kiya.
-     * * @variable categorizationOutput (JS Object)
-     * Example Structure:
-     * { nextRepresentative: "MARKETING" }
-     */
-    const categorizationOutput = JSON.parse(categorizationResponse.content as string)
+  // String output ko valid JavaScript object mein parse kar liya
+  const categorizationOutput = JSON.parse(
+    categorizationResponse.content as string,
+  );
 
-    /**
-     * LangGraph State Update:
-     * messages array mein 'supportResponse' append ho jayega.
-     * nextRepresentative property mein string ('MARKETING', 'LEARNING', ya 'RESPOND') save ho jayegi.
-     */
-    return {
-        messages: [supportResponse],
-        nextRepresentative: categorizationOutput.nextRepresentative
-    }
+  // State return: Front Desk ka reply array mein append hoga aur next representative update ho jayega
+  return {
+    messages: [supportResponse],
+    nextRepresentative: categorizationOutput.nextRepresentative,
+  };
 }
 
-
-// NODE 2: MARKETING SUPPORT (WITH TOOLS)
+// ==========================================
+// 🚀 NODE 2: MARKETING SUPPORT (WITH TOOLS)
+// ==========================================
 async function marketingSupport(state: typeof StateAnnotation.State) {
-    console.log("🚀 Marketing Team Support Node Activated!");
+  console.log("🚀 Marketing Team Support Node Activated!");
 
-    // Model ke sath marketing tools ko bind kar diya taake model tool calling kar sake
-    const llmWithTools = model.bindTools(marketingTools)
+  // LLM ke sath marketing tools bind kiye taake woh function/tool calling execute kar sake
+  const llmWithTools = model.bindTools(marketingTools);
 
-    const systemPrompt = `You are an enthusiastic Marketing Support Specialist for Systems Limited (Web Dev & Gen AI courses). Your job is to assist students with fees, discounts, promos, and installments.
+  const systemPrompt = `You are an enthusiastic Marketing Support Specialist for Systems Limited (Web Dev & Gen AI courses). Your job is to assist students with fees, discounts, promos, and installments.
 
 Rules:
 - TOOL USAGE LIMIT: Always use tools to fetch live data.
 - 🛑 CRITICAL VERIFICATION: If a user asks for a discount on a SPECIFIC course (like "Rust", "Python", "React"), you MUST FIRST call the 'retrieve_data' tool to check if we actually offer that course.
 - NO HALLUCINATION: If 'retrieve_data' returns that the course is not found, DO NOT offer them a discount. Politely inform them that we currently do not offer that specific course.
 - If the course is verified to exist, call 'getOffers' to get the promo codes and provide them enthusiastically.
-- Tone & Style: Be persuasive, energetic, and natural. Never mention tools, databases, or background searches to the user; just deliver the facts smoothly.`
+- Tone & Style: Be persuasive, energetic, and natural. Never mention tools, databases, or background searches to the user; just deliver the facts smoothly.
 
-    /**
-     * ⚠️ IMPORTANT TRIMMING LOGIC:
-     * Front desk ne kaha tha: "Please hold while I transfer you..." 
-     * Agar marketing agent ko wo message bhi bhej diya jaye, to marketing agent confuse ho sakta hai 
-     * ya sochega ke jawab to pehle hi mil chuka hai. Isliye hum aakhri AI message (Frontdesk ka reply) 
-     * history se temporarily delete/slice kar dete hain taake Marketing Agent sirf user ka asal sawal dekhe.
-     */
-    let trimmedHistory = state.messages
+This is the summary of [0, -2] messages:
+${state.summary ? `\n🧠 PREVIOUS CHAT SUMMARY: ${state.summary}` : ""}
+`;
 
-    // Agar aakhri message AI ka hai (jo ke Front Desk ka tha), to usay hata do
-    if (trimmedHistory.at(-1)?.getType() === 'ai') {
-        trimmedHistory = trimmedHistory.slice(0, -1)
-    }
+  // ⚠️ HISTORY TRIMMING LOGIC:
+  // Agar pichla message AI ka transfer statement hai ("Please hold..."), toh hum use history se slice kar dete hain
+  // taake Marketing agent seedha user ke direct question par focus kare aur break ya loop na ho.
+  let trimmedHistory = state.messages;
 
-    /**
-     * Marketing Agent ki LLM Call.
-     * * @variable marketingResponse (AIMessage Object)
-     * * 🌟 Case A (Agar model ko tool chalana hai):
-     * AIMessage {
-     * content: "",
-     * tool_calls: [
-     * {
-     * name: "getOffers",
-     * args: {},
-     * id: "call_abc123"
-     * }
-     * ]
-     * }
-     * * 🌟 Case B (Agar model ke paas tool ka data aa chuka hai aur wo final jawab de raha hai):
-     * AIMessage {
-     * content: "Great news! We have an active sale. Use code SUMMER-CODE-20 for 20% off!",
-     * tool_calls: []
-     * }
-     */
-    const marketingResponse = await llmWithTools.invoke([
-        {
-            role: 'system',
-            content: systemPrompt
-        },
-        ...trimmedHistory // Sirf user ka sawal aur pichli genuine history jayegi
-    ])
+  if (trimmedHistory.at(-1)?.getType() === "ai") {
+    trimmedHistory = trimmedHistory.slice(0, -1);
+  }
 
-    // State mein marketing agent ka response save karwa diya (chahe wo tool call ho ya text message)
-    return {
-        messages: [marketingResponse]
-    }
+  // Marketing LLM call trigger ki (Yeh ya toh Tool call karega ya direct message return karega)
+  const marketingResponse = await llmWithTools.invoke([
+    {
+      role: "system",
+      content: systemPrompt,
+    },
+    ...trimmedHistory,
+  ]);
+
+  return {
+    messages: [marketingResponse],
+  };
 }
 
-
-// NODE 3: LEARNING SUPPORT
+// ==========================================
+// 🧠 NODE 3: LEARNING SUPPORT
+// ==========================================
 async function learningSupport(state: typeof StateAnnotation.State) {
-    console.log("🧠 Learning Team Support Node Activated!");
-    const SYSTEM_PROMPT = `You are an expert Learning Support Assistant for Systems Limited. Your primary goal is to help users with course-related queries based ONLY on verified data returned by tools.
+  console.log("🧠 Learning Team Support Node Activated!");
+
+  const SYSTEM_PROMPT = `You are an expert Learning Support Assistant for Systems Limited. Your primary goal is to help users with course-related queries based ONLY on verified data returned by tools.
 
 To fulfill your role, you have access to the 'retrieve_data' tool. Follow these strict operational guidelines:
 
@@ -182,146 +159,224 @@ To fulfill your role, you have access to the 'retrieve_data' tool. Follow these 
    - If after 3 attempts you cannot find text that explicitly mentions the requested course, DO NOT invent a syllabus, modules, or details.
    - Politely inform the user that Systems Limited currently does not offer that specific course, and list the actual courses visible in the context if any (like Web Development or Generative AI).
 
-Tone: Keep your responses highly encouraging, clear, educational, and strictly honest based on provided data.`
+Tone: Keep your responses highly encouraging, clear, educational, and strictly honest based on provided data.
 
-    let trimmedHistory = state.messages
+     This is the summary of [0, -2] messages:
+     ${state.summary ? `\n🧠 PREVIOUS CHAT SUMMARY: ${state.summary}` : ""}
+`;
 
-    if (trimmedHistory.at(-1)?.getType() === 'ai') {
-        trimmedHistory = trimmedHistory.slice(0, -1)
-    }
+  // Same trimming logic: Transfer messages ko check karke temporary slice lagana
+  let trimmedHistory = state.messages;
 
-    const llmWithTools = model.bindTools(learningTools)
+  if (trimmedHistory.at(-1)?.getType() === "ai") {
+    trimmedHistory = trimmedHistory.slice(0, -1);
+  }
 
-    const learningResponse = await llmWithTools.invoke([
-        {
-            role: 'system',
-            content: SYSTEM_PROMPT
-        },
-        ...trimmedHistory
-    ])
+  const llmWithTools = model.bindTools(learningTools);
 
-    return {
-        messages: [learningResponse]
-    }
+  const learningResponse = await llmWithTools.invoke([
+    {
+      role: "system",
+      content: SYSTEM_PROMPT,
+    },
+    ...trimmedHistory,
+  ]);
+
+  return {
+    messages: [learningResponse],
+  };
 }
 
+// ==========================================
+// 📝 NODE 4: SUMMARIZE CONVERSATION
+// ==========================================
+async function summarizeConversation(state: typeof StateAnnotation.State) {
+  console.log("⚙️ Summarization Node Triggered!");
+  const currentSummary = state.summary || "";
+  const messages = state.messages;
 
-// CONDITIONAL ROUTING FUNCTIONS
+  // LLM Prompt jo purani summary aur chal rahe naye messages ko mila kar compressed statement banata hai
+  const summarizePrompt = `You are a helpful assistant tasked with summarizing a conversation between a customer support agent and a user.
+    ${currentSummary ? `Here is the previous summary of the chat so far: ${currentSummary}` : ""}
+    
+    Combine the previous summary with the new messages provided below. Keep the summary concise but retain all important details like the user's intent, specific courses asked about, and any decisions made.`;
+
+  const summarizeResponse = await model.invoke([
+    {
+      role: "system",
+      content: summarizePrompt,
+    },
+    ...messages,
+  ]);
+
+  // 🧹 GRAPH MEMORY CLEANING (CRITICAL STEP):
+  // Rolling Window Mechanism: Shuru se lekar aakhri 2 messages ko chhor kar, baaki saare messages array se nikal diye
+  // taake LLM ke token / context window overload na hon aur performance fast rahe.
+  const deleteMessages = messages
+    .slice(0, -2) // Aakhri do messages safe zone mein hain
+    .filter((m) => m.id) // Sirf un messages ko map kiya jinki validity unique ID se clear hai
+    .map((m) => new RemoveMessage({ id: m.id as string })); // LangGraph state reducer ko clear signal bheja deleting ka
+
+  return {
+    summary: summarizeResponse.content,
+    messages: deleteMessages, // State mein purane saare messages delete ho jayenge aur nayi summary save ho jayegi
+  };
+}
+
+// ==========================================
+// 🔀 CONDITIONAL ROUTING FUNCTIONS
+// ==========================================
+
 /**
- * Front Desk ke baad yeh function faisla karta hai ke kis department ke pass jana hai.
- * Based on: state.nextRepresentative
+ * Front Desk Node execution ke baad check karta hai ke next agent kaunsa hoga.
+ * Agar router response RESPOND hai aur array 10 messages cross kar chuka hai, toh yeh summary node par redirect karega.
  */
 function routingFunction(state: typeof StateAnnotation.State) {
-    if (state.nextRepresentative.includes("MARKETING")) {
-        return 'marketingSupport' // Marketing node par bhej do
-    } else if (state.nextRepresentative.includes("LEARNING")) {
-        return 'learningSupport'  // Learning node par bhej do
-    } else {
-        return "__end__"          // Baat khatam, chat end kar do
-    }
+  if (state.nextRepresentative.includes("MARKETING")) {
+    return "marketingSupport";
+  } else if (state.nextRepresentative.includes("LEARNING")) {
+    return "learningSupport";
+  } else {
+    // Rolling window check: Agar total messages ki length 10 se barh gayi toh pehle summary banegi
+    return state.messages.length > 10 ? "summarizeConversation" : "__end__";
+  }
 }
 
 /**
- * Marketing Node ke baad yeh function check karta hai ke kya LLM ne tool call generate ki hai?
- * Based on: state.messages ka sab se aakhri message
+ * Check karta hai ke kya Marketing Agent ne tool access kiya hai ya direct simple statement pass kiya hai.
  */
 function isMarketingToolNext(state: typeof StateAnnotation.State) {
-    // Sab se aakhri message nikal kar as AIMessage cast kiya
-    const lastMessage = state.messages[state.messages.length - 1] as AIMessage
+  const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
 
-    // Agar last message ke andar 'tool_calls' array mojud hai aur khali nahi hai
-    if (lastMessage.tool_calls?.length) {
-        console.log("🎯 Model wants to call a tool. Redirecting to ToolNode!");
-        return 'marketingTools' // Graph ko ToolNode ('marketingTools') par bhej do
-    } else {
-        console.log("💬 Model generated a final text response. Ending flow!");
-        return '__end__'        // Agar koi tool call nahi hai, to jawab mukammal hai -> End graph
-    }
+  // Agar last message mein model ne 'tool_calls' array return kiya hai, toh flow ToolNode par jayega
+  if (lastMessage.tool_calls?.length) {
+    console.log("🎯 Model wants to call a tool. Redirecting to ToolNode!");
+    return "marketingTools";
+  } else {
+    console.log(
+      "💬 Model generated a final text response. Checking for summarization window!",
+    );
+    // Agar tool call nahi hai aur messages length limits ko hit karti hain toh loop summary node par bhejega
+    return state.messages.length > 10 ? "summarizeConversation" : "__end__";
+  }
 }
 
+/**
+ * Check karta hai ke kya Learning Support Agent ko external data/Pinecone verification ki zaroorat hai?
+ */
 function isLearningToolNext(state: typeof StateAnnotation.State) {
-    const lastMessage = state.messages[state.messages.length - 1] as AIMessage
+  const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
 
-    if (lastMessage.tool_calls?.length) {
-        return 'learningTools'
-    }
-
-    return '__end__'
+  if (lastMessage.tool_calls?.length) {
+    return "learningTools"; // Tool execution node ki taraf verification point route kiya
+  } else {
+    return state.messages.length > 10 ? "summarizeConversation" : "__end__";
+  }
 }
 
-// Building Graph
+// ==========================================
+// 🏗️ GRAPH ARCHITECTURE & COMPILATION
+// ==========================================
+
 const graph = new StateGraph(StateAnnotation)
-    // Nodes Registered
-    .addNode('frontDeskSupport', frontDeskSupport)
-    .addNode('marketingSupport', marketingSupport)
-    .addNode('learningSupport', learningSupport)
-    .addNode('marketingTools', marketingToolNode) // Tool execution node
-    .addNode('learningTools', learningToolNode)
-    // Step 1: Start hamesha Front Desk se hoga
-    .addEdge('__start__', 'frontDeskSupport')
+  // Saare logic nodes graph map ke sath register kiye
+  .addNode("frontDeskSupport", frontDeskSupport)
+  .addNode("marketingSupport", marketingSupport)
+  .addNode("learningSupport", learningSupport)
+  .addNode("marketingTools", marketingToolNode)
+  .addNode("learningTools", learningToolNode)
+  .addNode("summarizeConversation", summarizeConversation)
 
-    // Step 2: Front Desk ke baad Router chalega (Conditional Edge)
-    .addConditionalEdges('frontDeskSupport', routingFunction, {
-        marketingSupport: 'marketingSupport',
-        learningSupport: "learningSupport",
-        "__end__": "__end__"
-    })
+  // Entry Point Config: Entry point hamesha Front Desk Support hoga
+  .addEdge("__start__", "frontDeskSupport")
 
-    // Step 3: Marketing Node chalne ke baad check hoga ke Tool chalana hai ya End karna hai
-    .addConditionalEdges('marketingSupport', isMarketingToolNext, {
-        marketingTools: 'marketingTools', // Agar tool chalana hai to 'marketingTools' node par bhejo
-        __end__: '__end__'               // Agar normal message hai to chat end kar do
-    })
+  // Front Desk Evaluation Path Settings (Router determines destination)
+  .addConditionalEdges("frontDeskSupport", routingFunction, {
+    marketingSupport: "marketingSupport",
+    learningSupport: "learningSupport",
+    summarizeConversation: "summarizeConversation",
+    __end__: "__end__",
+  })
 
-    .addConditionalEdges('learningSupport', isLearningToolNext, {
-        'learningTools': 'learningTools',
-        '__end__': '__end__'
-    })
+  // Marketing Team execution limits and data checkpoints
+  .addConditionalEdges("marketingSupport", isMarketingToolNext, {
+    marketingTools: "marketingTools",
+    summarizeConversation: "summarizeConversation",
+    __end__: "__end__",
+  })
 
-    .addEdge('learningTools', 'learningSupport')
+  // Learning Team data verification pipelines
+  .addConditionalEdges("learningSupport", isLearningToolNext, {
+    learningTools: "learningTools",
+    summarizeConversation: "summarizeConversation",
+    __end__: "__end__",
+  })
 
-    // Step 4: Tool chalne ke baad wapas Marketing Node par bhejo taake LLM tool ka output parh sake! (Loop)
-    .addEdge('marketingTools', 'marketingSupport')
+  // Cyclic Loops Management: Tool processing ke baad flow wapas execution nodes par loop back karega
+  .addEdge("learningTools", "learningSupport")
+  .addEdge("marketingTools", "marketingSupport");
 
-// Graph compile ho kar execution ke liye tayar hai
-const app = graph.compile({ checkpointer })
+// State checkpoint logic pass karke graph runtime app compile kiye
+export const app = graph.compile({ checkpointer });
 
+// ==========================================
+// 🌐 API / FRONTEND EXPORTABLE FUNCTION
+// ==========================================
 
-//  MAIN EXECUTION (RUNNING THE GRAPH)
-async function main() {
+/**
+ * `askAgent` wrapper standard string queries handle karta hai.
+ * Yeh function Express API controllers ya kisi bhi system endpoint se direct call kiya ja sakta hai.
+ */
+export async function askAgent(question: string, threadId = "1") {
+  const result = await app.invoke(
+    {
+      messages: [
+        {
+          role: "human",
+          content: question,
+        },
+      ],
+    },
+    {
+      // Thread Id har alag customer screen session ko system background pe tracker provide karti hai
+      configurable: { thread_id: threadId },
+    },
+  );
 
-    const rl = readLine.createInterface({ input: process.stdin, output: process.stdout })
-
-    while (true) {
-        const question = await rl.question("User Query: ")
-
-        if (question.toLowerCase() === "exit") {
-            break
-        }
-
-
-        const result = await app.invoke(
-            {
-                messages: [
-                    {
-                        role: 'human',
-                        content: question
-                    }
-                ]
-            },
-            {
-                configurable: { thread_id: '1' }
-            }
-
-        );
-
-
-        console.log("Assistant: ", result.messages[result.messages.length - 1]?.content);
-
-    }
-
-    rl.close()
-
+  // Aakhri system output content validate karke formatting structure create karna
+  const lastMessage = result.messages[result.messages.length - 1];
+  return typeof lastMessage?.content === "string"
+    ? lastMessage.content
+    : JSON.stringify(lastMessage?.content ?? "");
 }
 
-main()
+// ==========================================
+// 💻 CLI EXECUTION LOOP (TERMINAL TESTING)
+// ==========================================
+async function main() {
+  const rl = readLine.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  while (true) {
+    const question = await rl.question("User Query: ");
+
+    if (question.toLowerCase() === "exit") {
+      break;
+    }
+
+    const answer = await askAgent(question);
+    console.log("Assistant: ", answer);
+  }
+  rl.close();
+}
+
+// Check kiya ja raha hai ke kya file terminal se chalayi gayi hai ya module import ki shakal mein chal rahi hai
+const isCliRun = process.argv[1]
+  ? import.meta.url === pathToFileURL(process.argv[1]).href
+  : false;
+
+if (isCliRun) {
+  main();
+}
