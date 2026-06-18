@@ -29,7 +29,31 @@ async function generator(state: typeof State.State) {
 }
 
 async function reflector(state: typeof State.State) {
-    return state
+    const SYSTEM_PROMPT = `You are a LinkedIn post critique. Your task is to give feedback on the previously generated post by the writer agent.
+
+Check against:
+1) Strong hook in 1–2 lines
+2) Beginner-friendly clarity; explain jargon with analogy/example
+3) Specific insights and concrete examples (not generic advice)
+4) Skimmable formatting (short lines, whitespace)
+5) Clear CTA to follow for more
+6) 160–220 words, no emojis, authentic tone, no buzzwords, no controversy
+
+Output format (no scores, no questions, no meta):
+Start with exactly:
+"Revise now. Apply ALL changes below. Output only the revised post text."
+Then list ONLY bullet-point FIXES (edit instructions). Do NOT include any rewritten sentences or paragraphs. Do NOT write the post.
+
+Return only the fixes.`
+
+    const response = await model.invoke([
+        new SystemMessage(SYSTEM_PROMPT),
+        ...state.messages
+    ])
+
+    return {
+        messages: [response.content as string]
+    }
 }
 
 
