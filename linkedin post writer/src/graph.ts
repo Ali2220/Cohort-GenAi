@@ -1,7 +1,7 @@
 import { START, StateGraph } from "@langchain/langgraph"
 import { State } from "./state.js"
 import { model } from "./model.js"
-import { SystemMessage } from "@langchain/core/messages"
+import { AIMessage, SystemMessage } from "@langchain/core/messages"
 
 async function generator(state: typeof State.State) {
     const SYSTEM_PROMPT = `You are a LinkedIn writing assistant for beginner devs (0–2 years).
@@ -46,9 +46,14 @@ Then list ONLY bullet-point FIXES (edit instructions). Do NOT include any rewrit
 
 Return only the fixes.`
 
+    const lastAiMessage = [...state.messages].reverse().find(m => m.getType() === 'ai')
+
+    console.log("Last Ai Message: ", lastAiMessage);
+    
+
     const response = await model.invoke([
         new SystemMessage(SYSTEM_PROMPT),
-        ...state.messages
+        lastAiMessage as AIMessage
     ])
 
     return {
@@ -66,7 +71,7 @@ function isReflectorNext(state: typeof State.State) {
     return 'reflector'
 }
 
-const graph = new StateGraph(State)
+export const graph = new StateGraph(State)
     .addNode("generator", generator)
     .addNode("reflector", reflector)
     // edges
@@ -76,3 +81,4 @@ const graph = new StateGraph(State)
         "reflector": "reflector"
     })
     .addEdge("reflector", "generator")
+
