@@ -52,14 +52,18 @@ Return only the fixes.`
     ])
 
     return {
-        messages: [response.content as string]
+        messages: [response.content as string],
+        revisions: state.revisions ? state.revisions + 1 : 1
     }
 }
 
 
 function isReflectorNext(state: typeof State.State) {
     // condition logic
-    return ''
+    if (state.revisions >= 5) {
+        return "__end__"
+    }
+    return 'reflector'
 }
 
 const graph = new StateGraph(State)
@@ -67,5 +71,8 @@ const graph = new StateGraph(State)
     .addNode("reflector", reflector)
     // edges
     .addEdge(START, 'generator')
-    .addConditionalEdges('generator', isReflectorNext, {})
+    .addConditionalEdges('generator', isReflectorNext, {
+        "__end__": "__end__",
+        "reflector": "reflector"
+    })
     .addEdge("reflector", "generator")
