@@ -29,7 +29,7 @@ Current time: ${currentDateTime}
     ])
 
     return {
-        messages: new AIMessage(JSON.stringify(response))
+        messages: [new AIMessage(JSON.stringify(response))]
     }
 }
 
