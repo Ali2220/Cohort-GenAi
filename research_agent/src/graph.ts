@@ -2,6 +2,7 @@ import { AIMessage } from "@langchain/core/messages";
 import { model } from "./model.js";
 import { graphState, questionAnswerSchema } from "./state.js";
 import { StateGraph } from "@langchain/langgraph";
+import { searchExecutor } from "./tools.ts";
 
 async function responder(state: typeof graphState.State) {
 
@@ -27,11 +28,14 @@ Current time: ${currentDateTime}
             content: "Reflect on the user's original question and the actions taken thus far. Respond using structured output."
         }
     ])
+    
 
     return {
         messages: [new AIMessage(JSON.stringify(response))]
     }
 }
 
+
 const workflow = new StateGraph(graphState)
 .addNode('responder', responder)
+.addNode("searchExecutor", searchExecutor)
