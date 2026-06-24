@@ -12,7 +12,11 @@ export const graphState = Annotation.Root({
     //   HumanMessage(content: "What is quantum computing?"), 
     //   AIMessage(content: '{"answer": "...", "reflection": {...}}') 
     // ]
-    ...MessagesAnnotation.spec
+    ...MessagesAnnotation.spec,
+    iterations: Annotation<number>({
+        reducer: (cur, next) => next,
+        default: () => 0
+    })
 })
 
 // ==========================================
@@ -31,7 +35,6 @@ export const reflectionSchema = z.object({
 // }
 
 // Main Answer Schema: Yeh LLM ka final structured response hoga jismein answer, 
-// upar wali reflection, aur mazeed search karne ke liye queries hongi.
 export const questionAnswerSchema = z.object({
     answer: z.string().describe('~250 word detailed answer to the question.'),
     reflection: reflectionSchema,

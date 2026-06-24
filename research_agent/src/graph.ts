@@ -85,11 +85,29 @@ References:
     ])
 
     return {
-        messages: [new AIMessage(JSON.stringify(response))]
+        messages: [new AIMessage(JSON.stringify(response))],
+        iterations: state.iterations + 1
     }
+}
+
+
+function shouldEnd(state: typeof graphState.State) {
+    if (state.iterations >= 2) {
+        return "__end__"
+    }
+
+    return "searchExecutor"
 }
 
 const workflow = new StateGraph(graphState)
     .addNode("responder", responder)
     .addNode("searchExecutor", searchExecutor)
     .addNode("revisor", revisor)
+
+    .addEdge("__start__", "responder")
+    .addEdge("responder", "searchExecutor")
+    .addEdge("searchExecutor", "revisor")
+    .addConditionalEdges("revisor", shouldEnd, {
+        "__end": "__end__",
+        "searchExecutor": "searchExecutor"
+    })
