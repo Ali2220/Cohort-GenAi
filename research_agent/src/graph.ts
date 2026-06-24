@@ -99,7 +99,7 @@ function shouldEnd(state: typeof graphState.State) {
     return "searchExecutor"
 }
 
-const workflow = new StateGraph(graphState)
+export const workflow = new StateGraph(graphState)
     .addNode("responder", responder)
     .addNode("searchExecutor", searchExecutor)
     .addNode("revisor", revisor)
@@ -108,6 +108,6 @@ const workflow = new StateGraph(graphState)
     .addEdge("responder", "searchExecutor")
     .addEdge("searchExecutor", "revisor")
     .addConditionalEdges("revisor", shouldEnd, {
-        "__end": "__end__",
+        "__end__": "__end__",
         "searchExecutor": "searchExecutor"
     })
