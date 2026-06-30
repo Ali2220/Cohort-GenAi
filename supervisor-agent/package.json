@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsx index.ts",
     "auth": "tsx src/auth.ts"
   },
   "keywords": [],
@@ -20,6 +21,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^26.0.1"
+    "@types/node": "^26.0.1",
+    "tsx": "^4.22.4"
   }
 }
