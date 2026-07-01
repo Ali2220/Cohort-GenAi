@@ -2,11 +2,8 @@ import { tool } from '@langchain/core/tools'
 import dotenv from 'dotenv'
 dotenv.config()
 import { google } from "googleapis"
-import { any, z } from "zod"
+import { z } from "zod"
 
-// ============================================================================
-// 1. OAUTH2 CLIENT & GOOGLE CALENDAR SETUP
-// ============================================================================
 
 // Google API client initialize kar rahe hain .env credentials ke sath
 const oauth2Client = new google.auth.OAuth2(
@@ -15,19 +12,14 @@ const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_REDIRECT_URI
 )
 
-// Refresh token set kar rahe hain taake script ko baar baar manual login na karna pare
-// Yeh token offline access ke liye use hota hai
 oauth2Client.setCredentials({
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN!
 })
 
-// Calendar API ka v3 instance create kar rahe hain authorized client ke sath
 const calendar = google.calendar({ version: "v3", auth: oauth2Client })
 
 
-// ============================================================================
-// 2. TOOL: CREATE CALENDAR EVENT
-// ============================================================================
+// TOOL: CREATE CALENDAR EVENT
 export const createCalendarEvent = tool(
     async ({ title, startTime, endTime, attendees, location, description }) => {
         try {
@@ -38,7 +30,7 @@ export const createCalendarEvent = tool(
                 description: description || undefined,
                 start: {
                     dateTime: startTime,
-                    timeZone: 'Asia/Karachi' // TimeZone explicit rakhna zaroori hai warna UTC pick kar lega
+                    timeZone: 'Asia/Karachi'
                 },
                 end: {
                     dateTime: endTime,
@@ -48,17 +40,13 @@ export const createCalendarEvent = tool(
                 attendees: attendees?.map((email: string) => ({ email })) || [],
             }
 
-            // 🛠️ FIX: Yahan 'await' zaroori tha taake event successfully save hone ka wait kare
             const response = await calendar.events.insert({
-                calendarId: 'primary', // 'primary' ka matlab logged-in user ka apna main calendar
+                calendarId: 'primary', 
                 requestBody: event,
             })
 
-            // Agent ke liye ek clean aur formatted success response return kar rahe hain
             return `✅ Event created!\n📌 Title: ${title}\n🕐 Start: ${startTime}\n🕐 End: ${endTime}\n📍 Location: ${location || 'Not set'}\n`;
         } catch (err: any) {
-            // Agar API fail ho, toh throw karne ke bajaye agent ko error string wapas bhejte hain 
-            // taake LangGraph loop break na ho aur agent khud error handle kar le
             return `❌ Failed to create event: ${err.message}`;
         }
     },
@@ -77,9 +65,7 @@ export const createCalendarEvent = tool(
 )
 
 
-// ============================================================================
-// 3. TOOL: GET AVAILABLE TIME SLOTS
-// ============================================================================
+// TOOL: GET AVAILABLE TIME SLOTS
 export const availableTimeSlots = tool(
     async ({ date, durationMinutes }) => {
         try {
@@ -88,7 +74,6 @@ export const availableTimeSlots = tool(
             const timeMax = `${date}T23:59:59Z`
 
             // Google ki FreeBusy API call karke check kar rahe hain ke us din kitne events already scheduled hain
-            // 🛠️ FIX: Yahan call par direct await laga diya hai clean syntax ke liye
             const response = await calendar.freebusy.query({
                 requestBody: {
                     timeMin,
@@ -123,7 +108,7 @@ export const availableTimeSlots = tool(
         description: "Check Google Calendar availability for a specific date.",
         schema: z.object({
             date: z.string().describe("ISO date: '2026-06-26'"),
-            durationMinutes: z.number().default(60), // Abhi ke liye logic mein use nahi ho raha, par schema mein hai
+            durationMinutes: z.number().default(60),
         }),
     }
 )
