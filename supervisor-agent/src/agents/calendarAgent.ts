@@ -6,7 +6,7 @@ const calendarTools = [createCalendarEvent, availableTimeSlots]
 const toolNode = new ToolNode(calendarTools)
 
 // MAIN CALENDAR AGENT (Node)
-async function calendarAgent(state: any) {
+export async function calendarAgent(state: any) {
 
     const SYSTEM_PROMPT = `You are a calendar scheduling assistant.
 Parse natural language scheduling requests into proper ISO datetime formats.
