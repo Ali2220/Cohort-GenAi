@@ -15,7 +15,7 @@ const model = new ChatGroq({
 // 2. State Definition
 const State = Annotation.Root({
     ...MessagesAnnotation.spec,
-    draft: Annotation<string>(), // Fixed syntax
+    draft: Annotation<string>(), 
     status: Annotation<string>() // Added to track final email status
 });
 
@@ -42,7 +42,7 @@ async function sendEmail(state: typeof State.State) {
     const decision = interrupt("Please review the draft. Type 'yes' to send or 'no' to discard:");
 
     // Process the decision sent via Command({ resume: ... })
-    const isApproved = String(decision).toLowerCase().trim() === 'yes';
+    const isApproved = String(decision).toLowerCase().trim().includes('yes');
 
     if (isApproved) {
         console.log("\n✅ Action: Email sent successfully!");
