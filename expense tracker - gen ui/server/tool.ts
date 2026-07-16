@@ -1,13 +1,23 @@
 import { tool } from "@langchain/core/tools";
 import * as z from "zod";
-import { initDB } from "./db.js"
+import { database } from "./agent.js"
 
 export const addExpense = tool(
     ({ title, amount }) => {
 
-        console.log({ title, amount });
+        const insert = database.prepare(
+            "INSERT INTO expenses (title, amount) VALUES (?, ?)"
+        )
 
-        return JSON.stringify({ status: "success" })
+        const result = insert.run(title, amount)
+        console.log("Inserted expense:", { title, amount, lastInsertRowid: result.lastInsertRowid });
+
+        return JSON.stringify({
+            status: "success",
+            expenseId: result.lastInsertRowid,
+            title,
+            amount
+        })
     },
     {
         name: "add_expense",
