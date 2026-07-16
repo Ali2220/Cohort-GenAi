@@ -1,5 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import * as z from "zod";
+import { initDB } from "./db.js"
 
 export const addExpense = tool(
     ({ title, amount }) => {

@@ -1,12 +1,21 @@
+import dotenv from "dotenv"
+dotenv.config()
 import { ChatGroq } from "@langchain/groq"
-import {MessagesAnnotation} from "@langchain/langgraph"
+import { MessagesAnnotation } from "@langchain/langgraph"
+import { initDB } from "./db.js"
 
+// initialize DB
+const database = initDB('./expenses.db')
+
+// LLM setup
 const llm = new ChatGroq({
+    apiKey: process.env.GROQ_API_KEY!,
     model: "openai/gpt-oss-120b",
     temperature: 0,
 })
 
-async function callModel(state: typeof MessagesAnnotation.State){
+// call model node
+async function callModel(state: typeof MessagesAnnotation.State) {
     const response = await llm.invoke([
         {
             role: 'human',
@@ -15,5 +24,5 @@ async function callModel(state: typeof MessagesAnnotation.State){
         ...state.messages
     ])
 
-    
+
 }
