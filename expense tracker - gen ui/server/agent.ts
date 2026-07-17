@@ -1,10 +1,11 @@
 import dotenv from "dotenv"
 dotenv.config()
 import { ChatGroq } from "@langchain/groq"
-import { MessagesAnnotation } from "@langchain/langgraph"
+import { MemorySaver, MessagesAnnotation, StateGraph } from "@langchain/langgraph"
 import { initDB } from "./db.js"
 import { addExpense } from "./tool.js"
 import { ToolNode } from "@langchain/langgraph/prebuilt"
+import type { AIMessage } from "@langchain/core/messages"
 
 // initialize DB
 export const database = initDB('./expenses.db')
@@ -39,3 +40,43 @@ async function callModel(state: typeof MessagesAnnotation.State) {
     }
 
 }
+
+function shouldContinue(state: typeof MessagesAnnotation.State) {
+    const lastMessage = state.messages[state.messages.length - 1] as AIMessage
+    if (lastMessage?.tool_calls && lastMessage?.tool_calls.length) {
+        return 'tools'
+    }
+
+    return "__end__"
+}
+
+const graph = new StateGraph(MessagesAnnotation)
+    .addNode('callModel', callModel)
+    .addNode('tools', toolNode)
+    .addEdge("__start__", "callModel")
+    .addConditionalEdges("callModel", shouldContinue, {
+        "tools": "tools",
+        "__end__": "__end__"
+    })
+
+const agent = graph.compile({ checkpointer: new MemorySaver() })
+
+async function main() {
+    const response = await agent.invoke({
+        messages: [
+            {
+                role: "human",
+                content: "add 3000 rs in my expense. I have bought grippers to play futsol."
+            }
+        ]
+    },
+    {
+        configurable: {thread_id: "1"}
+    }
+)
+
+    console.log(JSON.stringify(response));
+    
+}
+
+main()
