@@ -81,10 +81,13 @@ function shouldContinue(state: typeof MessagesAnnotation.State) {
 }
 
 function shouldEnd(state: typeof MessagesAnnotation.State) {
-    // const lastMessage = state.messages[state.messages.length - 1] as ToolMessage
-    // if (lastMessage.name === "generate_chart") {
-    //     return "__end__"
-    // }
+    const lastMessage = state.messages[state.messages.length - 1] as ToolMessage
+
+    const message = JSON.parse(lastMessage.content as string)
+
+    if (message.type === "chart") {
+        return "__end__"
+    }
 
     return "callModel"
 }
@@ -98,7 +101,7 @@ const graph = new StateGraph(MessagesAnnotation)
         "__end__": "__end__"
     })
     .addConditionalEdges('tools', shouldEnd, {
-        // "__end__": "__end__",
+        "__end__": "__end__",
         "callModel": "callModel"
     })
 
@@ -109,7 +112,7 @@ async function main() {
         messages: [
             {
                 role: "human",
-                content: "How much i spent this year, group by month. Please visualize"
+                content: "Tell me the total expenses for from 2026-07-22 to 2026-07-28 grouped by month and visualize it in a chart."
             }
         ]
     },

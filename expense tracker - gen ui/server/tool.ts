@@ -3,7 +3,6 @@ import * as z from "zod";
 import { database } from "./agent.js";
 
 export const addExpense = tool(
-    // Ye function actual implementation hai jo LLM call karega
     ({ title, amount }) => {
         try {
             // expenses table ke liye parameterized INSERT statement tayar karna
@@ -38,7 +37,6 @@ export const addExpense = tool(
 );
 
 export const getExpenses = tool(
-    // Ye function actual implementation hai jo LLM call karega
     ({ from, to }) => {
         try {
 
@@ -73,57 +71,61 @@ export const getExpenses = tool(
 );
 
 export const generateChart = tool(
-    // Ye function actual implementation hai jo LLM call karega
     ({ from, to, groupBy }) => {
         try {
-
-            let groupExpression: string
+            let groupExpression: string;
 
             switch (groupBy) {
                 case "month":
-                    // Output format: "2026-07"
+                    // Output format: "2026-07" (Year-Month)
                     groupExpression = "STRFTIME('%Y-%m', created_at)";
                     break;
 
                 case "week":
                     // Output format: "2026-W29" (Year + Week Number)
                     groupExpression = "STRFTIME('%Y-W%W', created_at)";
-                    break
+                    break;
 
                 case "date":
                 default:
                     // Output format: "2026-07-23"
-                    groupExpression = "DATE(created_at)"
-                    break
+                    groupExpression = "DATE(created_at)";
+                    break;
             }
 
+            // Dynamic aggregation SQL query (Expenses sum aur count calculate karne ke liye)
             const query = `
-        SELECT 
-        ${groupExpression} AS label,
-        SUM(amount) AS total,
-        COUNT(*) AS total_transactions
-        FROM expenses
-        WHERE DATE(created_at) BETWEEN ? AND ?
-        GROUP BY label
-        ORDER BY label ASC
-`;
+                SELECT 
+                    ${groupExpression} AS label,
+                    SUM(amount) AS total,
+                    COUNT(*) AS total_transactions
+                FROM expenses
+                WHERE DATE(created_at) BETWEEN ? AND ?
+                GROUP BY label
+                ORDER BY label ASC
+            `;
 
-            const stmt = database.prepare(query)
-            const chartData = stmt.all(from, to)
+            // Prepared statement execution (SQL Injection protection ke sath)
+            const stmt = database.prepare(query);
+            const chartData = stmt.all(from, to);
 
-            console.log("Generated Chart Data:", chartData);
+            // Data Transformation: Row data ko dynamic key ([groupBy]) mein map karna 
+            // Result example: [{ "month": "2026-07", "amount": 450 }]
+            const result = chartData.map((row) => {
+                return {
+                    [groupBy]: row.label,
+                    amount: row.total
+                };
+            });
 
             return JSON.stringify({
-                uiComponent: "ExpenseBarChart", // Frontend component identifying key
-                meta: {
-                    from,
-                    to,
-                    groupBy
-                },
-                data: chartData // Formatted array e.g. [{ label: "2026-07", total: 450, total_transactions: 5 }]
-
+                type: "chart",
+                data: result,
+                labelKey: groupBy 
             });
+
         } catch (err) {
+            console.error("Error generating chart data:", err);
             return JSON.stringify({
                 status: "error",
                 message: "Failed to fetch aggregated chart data from database",
