@@ -1,0 +1,164 @@
+{
+  messages: [
+    HumanMessage {
+      "id": "1fd00ee1-d3da-46f8-83f1-556d4e602215",
+      "content": "Tell me the total expenses for from 2026-07-22 to 2026-07-28 grouped by month and visualize it in a chart.",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    }
+  ]
+}
+{
+  messages: [
+    HumanMessage {
+      "id": "1fd00ee1-d3da-46f8-83f1-556d4e602215",
+      "content": "Tell me the total expenses for from 2026-07-22 to 2026-07-28 grouped by month and visualize it in a chart.",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    },
+    AIMessage {
+      "id": "509b2735-a556-4d6c-9a71-04f1ac25571d",
+      "content": "",
+      "additional_kwargs": {
+        "tool_calls": [
+          {
+            "id": "fc_c1de86a3-5201-4299-ac59-adbbcb8f2c61",
+            "type": "function",
+            "function": "[Object]"
+          }
+        ]
+      },
+      "response_metadata": {
+        "tokenUsage": {
+          "completionTokens": 116,
+          "promptTokens": 807,
+          "totalTokens": 923
+        },
+        "finish_reason": "tool_calls",
+        "id": "chatcmpl-422c9798-6c17-4c39-be1e-e932b2358d46",
+        "object": "chat.completion",
+        "created": 1785762351,
+        "model": "openai/gpt-oss-120b",
+        "usage": {
+          "queue_time": 0.205287141,
+          "prompt_tokens": 807,
+          "prompt_time": 0.204166875,
+          "completion_tokens": 116,
+          "completion_time": 0.243467001,
+          "total_tokens": 923,
+          "total_time": 0.447633876,
+          "completion_tokens_details": {
+            "reasoning_tokens": 64
+          }
+        },
+        "usage_breakdown": null,
+        "system_fingerprint": "fp_6c36ac20de",
+        "x_groq": {
+          "id": "req_01kz3vp1znfkyvqqy61rz9vdt9",
+          "seed": 1343813715
+        },
+        "service_tier": "on_demand",
+        "model_provider": "groq"
+      },
+      "tool_calls": [
+        {
+          "name": "generate_chart",
+          "args": {
+            "from": "2026-07-22",
+            "groupBy": "month",
+            "to": "2026-07-28"
+          },
+          "type": "tool_call",
+          "id": "fc_c1de86a3-5201-4299-ac59-adbbcb8f2c61"
+        }
+      ],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 807,
+        "output_tokens": 116,
+        "total_tokens": 923
+      }
+    }
+  ]
+}
+{
+  messages: [
+    HumanMessage {
+      "id": "1fd00ee1-d3da-46f8-83f1-556d4e602215",
+      "content": "Tell me the total expenses for from 2026-07-22 to 2026-07-28 grouped by month and visualize it in a chart.",
+      "additional_kwargs": {},
+      "response_metadata": {}
+    },
+    AIMessage {
+      "id": "509b2735-a556-4d6c-9a71-04f1ac25571d",
+      "content": "",
+      "additional_kwargs": {
+        "tool_calls": [
+          {
+            "id": "fc_c1de86a3-5201-4299-ac59-adbbcb8f2c61",
+            "type": "function",
+            "function": "[Object]"
+          }
+        ]
+      },
+      "response_metadata": {
+        "tokenUsage": {
+          "completionTokens": 116,
+          "promptTokens": 807,
+          "totalTokens": 923
+        },
+        "finish_reason": "tool_calls",
+        "id": "chatcmpl-422c9798-6c17-4c39-be1e-e932b2358d46",
+        "object": "chat.completion",
+        "created": 1785762351,
+        "model": "openai/gpt-oss-120b",
+        "usage": {
+          "queue_time": 0.205287141,
+          "prompt_tokens": 807,
+          "prompt_time": 0.204166875,
+          "completion_tokens": 116,
+          "completion_time": 0.243467001,
+          "total_tokens": 923,
+          "total_time": 0.447633876,
+          "completion_tokens_details": {
+            "reasoning_tokens": 64
+          }
+        },
+        "usage_breakdown": null,
+        "system_fingerprint": "fp_6c36ac20de",
+        "x_groq": {
+          "id": "req_01kz3vp1znfkyvqqy61rz9vdt9",
+          "seed": 1343813715
+        },
+        "service_tier": "on_demand",
+        "model_provider": "groq"
+      },
+      "tool_calls": [
+        {
+          "name": "generate_chart",
+          "args": {
+            "from": "2026-07-22",
+            "groupBy": "month",
+            "to": "2026-07-28"
+          },
+          "type": "tool_call",
+          "id": "fc_c1de86a3-5201-4299-ac59-adbbcb8f2c61"
+        }
+      ],
+      "invalid_tool_calls": [],
+      "usage_metadata": {
+        "input_tokens": 807,
+        "output_tokens": 116,
+        "total_tokens": 923
+      }
+    },
+    ToolMessage {
+      "id": "9338a689-45f2-4f2c-aa83-6a84affa21a2",
+      "content": "{\"type\":\"chart\",\"data\":[{\"month\":\"2026-07\",\"amount\":8700}],\"labelKey\":\"month\"}",
+      "name": "generate_chart",
+      "additional_kwargs": {},
+      "response_metadata": {},
+      "tool_call_id": "fc_c1de86a3-5201-4299-ac59-adbbcb8f2c61"
+    }
+  ]
+}

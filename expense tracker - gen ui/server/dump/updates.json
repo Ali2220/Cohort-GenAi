@@ -1,0 +1,83 @@
+Chunk:  {
+  callModel: {
+    messages: [
+      AIMessage {
+        "id": "4cce2500-747f-4895-81ca-ef08031b4ab4",
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "fc_c651adbc-5e78-4a35-b785-4bea59ab2bca",
+              "type": "function",
+              "function": "[Object]"
+            }
+          ]
+        },
+        "response_metadata": {
+          "tokenUsage": {
+            "completionTokens": 122,
+            "promptTokens": 807,
+            "totalTokens": 929
+          },
+          "finish_reason": "tool_calls",
+          "id": "chatcmpl-e7050dcc-9455-4507-abff-013f28fc15e1",
+          "object": "chat.completion",
+          "created": 1785758111,
+          "model": "openai/gpt-oss-120b",
+          "usage": {
+            "queue_time": 0.334600997,
+            "prompt_tokens": 807,
+            "prompt_time": 0.044326505,
+            "completion_tokens": 122,
+            "completion_time": 0.260706712,
+            "total_tokens": 929,
+            "total_time": 0.305033217,
+            "completion_tokens_details": {
+              "reasoning_tokens": 70
+            }
+          },
+          "usage_breakdown": null,
+          "system_fingerprint": "fp_5781dfb07c",
+          "x_groq": {
+            "id": "req_01kz3qmn8hekqsxzvf9j004dp8",
+            "seed": 1777567043
+          },
+          "service_tier": "on_demand",
+          "model_provider": "groq"
+        },
+        "tool_calls": [
+          {
+            "name": "generate_chart",
+            "args": {
+              "from": "2026-07-22",
+              "groupBy": "month",
+              "to": "2026-07-28"
+            },
+            "type": "tool_call",
+            "id": "fc_c651adbc-5e78-4a35-b785-4bea59ab2bca"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "input_tokens": 807,
+          "output_tokens": 122,
+          "total_tokens": 929
+        }
+      }
+    ]
+  }
+}
+Chunk:  {
+  tools: {
+    messages: [
+      ToolMessage {
+        "id": "4a0d66e8-6fb0-4b84-8a17-c1d4125ea17b",
+        "content": "{\"type\":\"chart\",\"data\":[{\"month\":\"2026-07\",\"amount\":8700}],\"labelKey\":\"month\"}",
+        "name": "generate_chart",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "tool_call_id": "fc_c651adbc-5e78-4a35-b785-4bea59ab2bca"
+      }
+    ]
+  }
+}

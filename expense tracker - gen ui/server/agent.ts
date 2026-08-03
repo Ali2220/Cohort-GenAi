@@ -108,20 +108,27 @@ const graph = new StateGraph(MessagesAnnotation)
 const agent = graph.compile({ checkpointer: new MemorySaver() })
 
 async function main() {
-    const response = await agent.invoke({
+    const response = await agent.stream({
         messages: [
             {
                 role: "human",
-                content: "Tell me the total expenses for from 2026-07-22 to 2026-07-28 grouped by month and visualize it in a chart."
+                content: "show me a chart of my expenses for the last 3 months, grouped by month"
             }
         ]
     },
         {
-            configurable: { thread_id: "1" }
+            configurable: { thread_id: "1" },
+            streamMode: "messages"
         }
     )
 
-    console.log(JSON.stringify(response, null, 2));
+    for await (const [messageChunk] of response) {
+        const text = messageChunk.content
+
+        if (text) {
+            process.stdout.write(text as string)
+        }
+    }
 
 }
 

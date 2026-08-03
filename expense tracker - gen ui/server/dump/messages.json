@@ -1,0 +1,1003 @@
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " you",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " with",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " your",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " expenses",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " today",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": "?",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " Whether",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " you",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": "’d",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " like",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " to",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " add",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " a",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " new",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " expense",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": ",",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " review",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " past",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " spending",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": ",",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " or",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " visualize",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " your",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " data",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": ",",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " just",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " let",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " me",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": " know",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": ".",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
+Chunk:  [
+  AIMessageChunk {
+    "id": "req_01kz3w5xg8fyq9ff41x84k19y7",
+    "content": "",
+    "additional_kwargs": {},
+    "response_metadata": {
+      "usage": {
+        "input_tokens": 776,
+        "output_tokens": 68,
+        "total_tokens": 844
+      },
+      "timing": {
+        "completion_time": 0.14233441,
+        "prompt_time": 0.03992987,
+        "queue_time": 0.194636027,
+        "total_time": 0.18226428
+      },
+      "model_provider": "groq"
+    },
+    "tool_calls": [],
+    "tool_call_chunks": [],
+    "invalid_tool_calls": []
+  },
+  {
+    tags: [],
+    name: undefined,
+    ls_integration: 'langchain_chat_model',
+    thread_id: '1',
+    langgraph_step: 1,
+    langgraph_node: 'callModel',
+    langgraph_triggers: [ 'branch:to:callModel' ],
+    langgraph_path: [ '__pregel_pull', 'callModel' ],
+    langgraph_checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    checkpoint_ns: 'callModel:c3d4d41c-a937-5578-8b38-915144aea84c',
+    ls_provider: 'groq',
+    ls_model_name: 'openai/gpt-oss-120b',
+    ls_model_type: 'chat',
+    ls_temperature: 0,
+    ls_max_tokens: undefined,
+    ls_stop: undefined,
+    versions: { '@langchain/core': '1.2.2', '@langchain/groq': '1.3.1' }
+  }
+]
