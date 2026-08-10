@@ -11,7 +11,12 @@ app.get("/chat", (req, res) => {
     // SSE
     // 1. add special header
     // 2. send data in special format
-    res.json({})
+    res.setHeader('Content-Type', 'text/event-stream')
+    
+    setInterval(() => {
+        res.write("event: cgPing\n")
+        res.write("data: Happy Coding\n\n")
+    }, 1000)
 })
 
 app.listen(3000, () => {
