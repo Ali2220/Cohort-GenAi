@@ -1,25 +1,37 @@
 import { useEffect, useState } from "react";
 import { ChatInput } from "./ChatInput";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 // import { ChatMessage } from "./ChatMessage";
 
 export function ChatContainer() {
   const [messages, setMessages] = useState<string[]>([]);
   useEffect(() => {
-    const evtSource = new EventSource("http://localhost:3000/chat");
+    // Backend se SSE stream handle karne ke liye async function
+    async function submitQuery() {
+      // fetchEventSource ke zariye POST SSE request bhej rahe hain
+      await fetchEventSource("http://localhost:3000/chat", {
+        // 1. Request Method
+        method: "POST",
 
-    evtSource.addEventListener("open", () => {
-      console.log("Connection opened");
-    });
+        // 2. Request Headers
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-    evtSource.addEventListener("cgPing", (event) => {
-      console.log("Recived eventName:", event.type);
-      setMessages((messages) => [...messages, event.data]);
-    });
+        // 3. Request Payload (User query ko JSON stringify kar rahe hain)
+        body: JSON.stringify({ query: "Hi" }),
 
-    // evtSource.addEventListener("message", (data) => {
-    //   console.log("Recived Message", data);
-    // });
-  }, []);
+        // 4. Stream Event Handler (Jab backend se naya event/chunk aaye)
+        onmessage(ev) {
+          // ev.event -> Event ka naam print karega (e.g., "cgPing", "message", "chart")
+          console.log(ev.event);
+        },
+      });
+    }
+
+    // Function ko execute kar rahe hain
+    submitQuery();
+  }, []); // Empty dependency array: Component mount hone par sirf ek baar chalega
 
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-950">
@@ -58,7 +70,9 @@ export function ChatContainer() {
       </div>
 
       {messages.map((message) => (
-        <div key={message} className="text-white">${message}</div>
+        <div key={message} className="text-white">
+          ${message}
+        </div>
       ))}
 
       {/* Messages Area */}
