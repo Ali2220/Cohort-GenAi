@@ -4,8 +4,8 @@ import cors from "cors"
 // Express application initialize kar rahe hain
 const app = express()
 
-app.use(express.json()) 
-app.use(cors())        
+app.use(express.json())
+app.use(cors())
 
 // SSE Endpoint (Server-Sent Events)
 app.post("/chat", (req, res) => {
@@ -13,9 +13,9 @@ app.post("/chat", (req, res) => {
     // STEP 1: SSE Ke Zaroori Headers Set Karein
     // ----------------------------------------------------
     // Browser ko batayein ke yeh ek stream response hai
-    const {query} = req.body
+    const { query } = req.body
     console.log("query ", query);
-    
+
     res.setHeader('Content-Type', 'text/event-stream')
 
     // ----------------------------------------------------

@@ -5,33 +5,36 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 export function ChatContainer() {
   const [messages, setMessages] = useState<string[]>([]);
-  useEffect(() => {
-    // Backend se SSE stream handle karne ke liye async function
-    async function submitQuery() {
-      // fetchEventSource ke zariye POST SSE request bhej rahe hain
-      await fetchEventSource("http://localhost:3000/chat", {
-        // 1. Request Method
-        method: "POST",
 
-        // 2. Request Headers
-        headers: {
-          "Content-Type": "application/json",
-        },
+  // Backend se SSE stream handle karne ke liye async function
+  async function submitQuery(userInput: string) {
+    // fetchEventSource ke zariye POST SSE request bhej rahe hain
+    await fetchEventSource("http://localhost:3000/chat", {
+      // 1. Request Method
+      method: "POST",
 
-        // 3. Request Payload (User query ko JSON stringify kar rahe hain)
-        body: JSON.stringify({ query: "Hi" }),
+      // 2. Request Headers
+      headers: {
+        "Content-Type": "application/json",
+      },
 
-        // 4. Stream Event Handler (Jab backend se naya event/chunk aaye)
-        onmessage(ev) {
-          // ev.event -> Event ka naam print karega (e.g., "cgPing", "message", "chart")
-          console.log(ev.event);
-        },
-      });
-    }
+      // 3. Request Payload (User query ko JSON stringify kar rahe hain)
+      body: JSON.stringify({ query: userInput }),
 
-    // Function ko execute kar rahe hain
-    submitQuery();
-  }, []); // Empty dependency array: Component mount hone par sirf ek baar chalega
+      // 4. Stream Event Handler (Jab backend se naya event/chunk aaye)
+      onmessage(ev) {
+        // ev.event -> Event ka naam print karega (e.g., "cgPing", "message", "chart")
+        console.log(ev.event);
+        console.log(ev.data);
+        
+      },
+    });
+  }
+
+  const onSubmit = (userInput: string) => {
+    console.log("user input: ", userInput);
+    submitQuery(userInput);
+  };
 
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-950">
@@ -68,12 +71,6 @@ export function ChatContainer() {
           </div>
         </div>
       </div>
-
-      {messages.map((message) => (
-        <div key={message} className="text-white">
-          ${message}
-        </div>
-      ))}
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto w-full">
@@ -151,7 +148,7 @@ export function ChatContainer() {
 
       {/* Input Area */}
       <div className="shrink-0 w-full">
-        <ChatInput />
+        <ChatInput onSubmit={onSubmit} />
       </div>
     </div>
   );
