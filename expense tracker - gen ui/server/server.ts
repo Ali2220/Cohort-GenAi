@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from "cors"
+import { agent } from "./agent.js"
 
 // Express application initialize kar rahe hain
 const app = express()
@@ -8,7 +9,7 @@ app.use(express.json())
 app.use(cors())
 
 // SSE Endpoint (Server-Sent Events)
-app.post("/chat", (req, res) => {
+app.post("/chat", async (req, res) => {
     // ----------------------------------------------------
     // STEP 1: SSE Ke Zaroori Headers Set Karein
     // ----------------------------------------------------
@@ -18,18 +19,32 @@ app.post("/chat", (req, res) => {
 
     res.setHeader('Content-Type', 'text/event-stream')
 
-    // ----------------------------------------------------
-    // STEP 2: Client Ko Data Stream Karna (Periodic Push)
-    // ----------------------------------------------------
-    // Har 1 second (1000ms) baad data client ko push hoga
-    const intervalId = setInterval(() => {
-        // SSE Rule 1: Custom event name ("event: <name>\n")
-        res.write("event: cgPing\n")
+    const response = await agent.stream({
+        messages: [
+            {
+                role: "human",
+                content: query
+            }
+        ]
+    },
+        {
+            // todo: generate thread_id dynamically in future
+            configurable: { thread_id: "1" },
+            streamMode: "messages"
+        }
+    )
 
-        // SSE Rule 2: Message payload ("data: <content>\n\n")
-        // Double newline (\n\n) batata hai ke ek message packet complete ho gaya hai
-        res.write(`data: ${query}\n\n`)
-    }, 1000)
+    for await (const chunk of response) {
+
+        const text = chunk[0].content
+        console.log(text);
+
+        let message = { type: "ai", payload: chunk[0].content }
+
+        res.write(`data: ${JSON.stringify(message)}\n\n`)
+    }
+
+    res.end()
 
 })
 

@@ -105,31 +105,31 @@ const graph = new StateGraph(MessagesAnnotation)
         "callModel": "callModel"
     })
 
-const agent = graph.compile({ checkpointer: new MemorySaver() })
+export const agent = graph.compile({ checkpointer: new MemorySaver() })
 
-async function main() {
-    const response = await agent.stream({
-        messages: [
-            {
-                role: "human",
-                content: "show me a chart of my expenses for the last 3 months, grouped by month"
-            }
-        ]
-    },
-        {
-            configurable: { thread_id: "1" },
-            streamMode: "messages"
-        }
-    )
+// async function main() {
+//     const response = await agent.stream({
+//         messages: [
+//             {
+//                 role: "human",
+//                 content: "show me a chart of my expenses for the last 3 months, grouped by month"
+//             }
+//         ]
+//     },
+//         {
+//             configurable: { thread_id: "1" },
+//             streamMode: "messages"
+//         }
+//     )
 
-    for await (const [messageChunk] of response) {
-        const text = messageChunk.content
+//     for await (const [messageChunk] of response) {
+//         const text = messageChunk.content
 
-        if (text) {
-            process.stdout.write(text as string)
-        }
-    }
+//         if (text) {
+//             process.stdout.write(text as string)
+//         }
+//     }
 
-}
+// }
 
-main()
+// main()
