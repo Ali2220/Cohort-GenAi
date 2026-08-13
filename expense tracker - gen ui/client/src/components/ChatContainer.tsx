@@ -1,46 +1,87 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
-// import { ChatMessage } from "./ChatMessage";
 
+// ============================================
+// 1. DISCRIMINATED UNION: SSE Stream Messages
+// ============================================
+// Har message ka ek "type" hota hai jo batata hai ke ye kis tarah ka data hai
+// TypeScript isse dekh ke exact shape samajh jata hai
+
+type StreamMessage =
+  // Case 1: AI text token (streaming word-by-word)
+  | {
+      type: "ai";
+      payload: { text: string };
+    }
+  // Case 2: Tool shuru hone ka notification (e.g., "add_expense chal raha hai")
+  | {
+      type: "toolCall:start";
+      payload: {
+        name: string; // Tool ka naam
+        args: Record<string, any>; // Tool ke arguments (key-value pairs)
+      };
+    }
+  // Case 3: Tool complete hone ka result
+  | {
+      type: "tool";
+      payload: {
+        name: string; // Tool ka naam
+        result: Record<string, any>; // Tool ka output
+      };
+    };
+
+// ============================================
+// 2. MAIN COMPONENT: Chat UI Container
+// ============================================
 export function ChatContainer() {
+  // Messages array: Abhi sirf string[] hai, baad mein StreamMessage[] banega
   const [messages, setMessages] = useState<string[]>([]);
 
-  // Backend se SSE stream handle karne ke liye async function
+  // ============================================
+  // 3. SSE STREAM FUNCTION: Server se real-time data lo
+  // ============================================
   async function submitQuery(userInput: string) {
-    // fetchEventSource ke zariye POST SSE request bhej rahe hain
+    // fetchEventSource = SSE client library
+    // Ye normal fetch nahi hai — ye connection open rakhta hai streaming ke liye
     await fetchEventSource("http://localhost:3000/chat", {
-      // 1. Request Method
       method: "POST",
-
-      // 2. Request Headers
       headers: {
         "Content-Type": "application/json",
       },
-
-      // 3. Request Payload (User query ko JSON stringify kar rahe hain)
       body: JSON.stringify({ query: userInput }),
 
-      // 4. Stream Event Handler (Jab backend se naya event/chunk aaye)
+      // ============================================
+      // 4. ONMESSAGE: Jab bhi server se data aaye
+      // ============================================
+      // Ye function baar-baar chalega jab tak stream khatam na ho
       onmessage(ev) {
-        // ev.event -> Event ka naam print karega (e.g., "cgPing", "message", "chart")
-        console.log(ev.event);
-        console.log(ev.data);
-        
+        // Server se aaya data JSON mein hota hai — parse karo
+        const parsedData = JSON.parse(ev.data) as StreamMessage;
+        console.log(parsedData); // Debug ke liye
       },
     });
   }
 
+  // ============================================
+  // 5. SUBMIT HANDLER: User ne message bheja
+  // ============================================
   const onSubmit = (userInput: string) => {
     console.log("user input: ", userInput);
-    submitQuery(userInput);
+    submitQuery(userInput); // SSE stream shuru karo
   };
 
+  // ============================================
+  // 6. RENDER: UI Layout
+  // ============================================
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-950">
-      {/* Header */}
+      {/* ============================================
+          HEADER: Top bar with logo + status
+          ============================================ */}
       <div className="shrink-0 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-xl w-full">
         <div className="w-full max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+          {/* Logo + Title */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-lg">
               <svg
@@ -64,6 +105,8 @@ export function ChatContainer() {
               <p className="text-xs text-zinc-500">Powered by advanced AI</p>
             </div>
           </div>
+
+          {/* Online Status Badge */}
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
               Online
@@ -72,11 +115,17 @@ export function ChatContainer() {
         </div>
       </div>
 
-      {/* Messages Area */}
+      {/* ============================================
+          MESSAGES AREA: Chat messages ya Empty State
+          ============================================ */}
       <div className="flex-1 overflow-y-auto w-full">
         <div className="w-full max-w-5xl mx-auto">
+          {/* ============================================
+              EMPTY STATE: Jab koi message nahi hai
+              ============================================ */}
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[60vh] px-6 py-8">
+              {/* Animated Logo */}
               <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-purple-500 via-pink-500 to-orange-500 flex items-center justify-center shadow-2xl mb-6 animate-pulse">
                 <svg
                   className="w-10 h-10 text-white"
@@ -92,6 +141,8 @@ export function ChatContainer() {
                   />
                 </svg>
               </div>
+
+              {/* Heading */}
               <h2 className="text-3xl font-bold text-zinc-100 mb-3">
                 How can I help you today?
               </h2>
@@ -99,6 +150,8 @@ export function ChatContainer() {
                 Ask me anything, and I'll do my best to assist you with
                 information, analysis, and creative solutions.
               </p>
+
+              {/* Suggestion Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl px-4">
                 {[
                   {
@@ -138,15 +191,20 @@ export function ChatContainer() {
               </div>
             </div>
           ) : (
+            /* ============================================
+               MESSAGES LIST: Jab messages hain
+               ============================================ */
             <div className="divide-y divide-zinc-800/50">
-              {/* Messages will be displayed here... */}
+              {/* TODO: Yahan messages map honge */}
               {/* <ChatMessage /> */}
             </div>
           )}
         </div>
       </div>
 
-      {/* Input Area */}
+      {/* ============================================
+          INPUT AREA: Bottom chat input
+          ============================================ */}
       <div className="shrink-0 w-full">
         <ChatInput onSubmit={onSubmit} />
       </div>
