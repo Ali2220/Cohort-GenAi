@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
+import { ChatMessage } from "./ChatMessage";
+import type { StreamMessage } from "../type.ts";
 
 // ============================================
 // 1. DISCRIMINATED UNION: SSE Stream Messages
@@ -8,40 +10,27 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 // Har message ka ek "type" hota hai jo batata hai ke ye kis tarah ka data hai
 // TypeScript isse dekh ke exact shape samajh jata hai
 
-type StreamMessage =
-  // Case 1: AI text token (streaming word-by-word)
-  | {
-      type: "ai";
-      payload: { text: string };
-    }
-  // Case 2: Tool shuru hone ka notification (e.g., "add_expense chal raha hai")
-  | {
-      type: "toolCall:start";
-      payload: {
-        name: string; // Tool ka naam
-        args: Record<string, any>; // Tool ke arguments (key-value pairs)
-      };
-    }
-  // Case 3: Tool complete hone ka result
-  | {
-      type: "tool";
-      payload: {
-        name: string; // Tool ka naam
-        result: Record<string, any>; // Tool ka output
-      };
-    };
 
 // ============================================
 // 2. MAIN COMPONENT: Chat UI Container
 // ============================================
 export function ChatContainer() {
-  // Messages array: Abhi sirf string[] hai, baad mein StreamMessage[] banega
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<StreamMessage[]>([]);
 
   // ============================================
   // 3. SSE STREAM FUNCTION: Server se real-time data lo
   // ============================================
   async function submitQuery(userInput: string) {
+    setMessages((prevMessages) => {
+      return [
+        ...prevMessages,
+        {
+          id: Date.now().toString(),
+          type: "user",
+          payload: { text: userInput },
+        },
+      ];
+    });
     // fetchEventSource = SSE client library
     // Ye normal fetch nahi hai — ye connection open rakhta hai streaming ke liye
     await fetchEventSource("http://localhost:3000/chat", {
@@ -196,7 +185,13 @@ export function ChatContainer() {
                ============================================ */
             <div className="divide-y divide-zinc-800/50">
               {/* TODO: Yahan messages map honge */}
-              {/* <ChatMessage /> */}
+              {messages.map((message) => {
+                return (
+                  <div key={message.id}>
+                    <ChatMessage message={message}/>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
