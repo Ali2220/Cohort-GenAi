@@ -4,35 +4,32 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { ChatMessage } from "./ChatMessage";
 import type { StreamMessage } from "../type.ts";
 
-// ============================================
-// 1. DISCRIMINATED UNION: SSE Stream Messages
-// ============================================
-// Har message ka ek "type" hota hai jo batata hai ke ye kis tarah ka data hai
-// TypeScript isse dekh ke exact shape samajh jata hai
-
-
-// ============================================
-// 2. MAIN COMPONENT: Chat UI Container
-// ============================================
 export function ChatContainer() {
+  // 'messages' chat history ka array hai jo UI render karta hai.
+  // Ye dikhta kaisa hai:
+  // [
+  //   { id: "1715683920.123", type: "user", payload: { text: "Hi AI!" } },
+  //   { id: "1715683921.456", type: "ai", payload: { text: "Hello! Kaise" } }
+  // ]
   const [messages, setMessages] = useState<StreamMessage[]>([]);
 
-  // ============================================
-  // 3. SSE STREAM FUNCTION: Server se real-time data lo
-  // ============================================
   async function submitQuery(userInput: string) {
+    // 'userInput' string hai jo input field se aati hai.
+    // Ye dikhti kaisi hai: "Hi AI!"
+
     setMessages((prevMessages) => {
+      // 'prevMessages' state update hone se pehle ka exact array snapshot hai.
+      // Ye same uper wale 'messages' array jaisa hi dikhta hai.
       return [
         ...prevMessages,
         {
-          id: Date.now().toString(),
+          id: Date.now().toString() + Math.random().toString(),
           type: "user",
           payload: { text: userInput },
         },
       ];
     });
-    // fetchEventSource = SSE client library
-    // Ye normal fetch nahi hai — ye connection open rakhta hai streaming ke liye
+
     await fetchEventSource("http://localhost:3000/chat", {
       method: "POST",
       headers: {
@@ -40,29 +37,56 @@ export function ChatContainer() {
       },
       body: JSON.stringify({ query: userInput }),
 
-      // ============================================
-      // 4. ONMESSAGE: Jab bhi server se data aaye
-      // ============================================
-      // Ye function baar-baar chalega jab tak stream khatam na ho
       onmessage(ev) {
-        // Server se aaya data JSON mein hota hai — parse karo
+        // 'ev.data' backend se stream hone wala raw string/text hai.
+        // Ye dikhta kaisa hai: "{\"payload\":{\"text\":\" ho?\"}}"
+
+        // 'parsedData' string ko proper JavaScript object mein convert kar deta hai.
+        // Ye dikhta kaisa hai:
+        // { payload: { text: " ho?" } }
         const parsedData = JSON.parse(ev.data) as StreamMessage;
-        console.log(parsedData); // Debug ke liye
+
+        setMessages((prevMessages) => {
+          // 'lastMessage' uss 'prevMessages' array ka sabse aakhri index (item) nikalta hai.
+          // Ye dikhta kaisa hai:
+          // { id: "1715683921.456", type: "ai", payload: { text: "Hello! Kaise" } }
+          const lastMessage = prevMessages[prevMessages.length - 1];
+
+          // Agar aakhri message already 'ai' ki hai, toh isi mein naya text append (jod) do
+          if (lastMessage && lastMessage.type === "ai") {
+            return [
+              ...prevMessages.slice(0, -1),
+              {
+                ...lastMessage,
+                payload: {
+                  // Yahan purana text ("Hello! Kaise") aur naya (" ho?") mil raha hai
+                  // Final result: "Hello! Kaise ho?"
+                  text: lastMessage.payload.text + parsedData.payload.text,
+                },
+              },
+            ];
+          }
+
+          // Agar aakhri message user ka tha, toh AI ka pehla chunk ek naye object ki tarah add hoga
+          return [
+            ...prevMessages,
+            {
+              id: Date.now().toString() + Math.random().toString(),
+              // type ko zbardasti 'ai' de rahe hain (future tools k liye masla ho skta hai, behtar hai ...parsedData use krein)
+              type: "ai",
+              payload: { text: parsedData.payload.text },
+            },
+          ];
+        });
       },
     });
   }
 
-  // ============================================
-  // 5. SUBMIT HANDLER: User ne message bheja
-  // ============================================
   const onSubmit = (userInput: string) => {
     console.log("user input: ", userInput);
     submitQuery(userInput); // SSE stream shuru karo
   };
 
-  // ============================================
-  // 6. RENDER: UI Layout
-  // ============================================
   return (
     <div className="flex flex-col h-screen w-full bg-zinc-950">
       {/* ============================================
@@ -188,7 +212,7 @@ export function ChatContainer() {
               {messages.map((message) => {
                 return (
                   <div key={message.id}>
-                    <ChatMessage message={message}/>
+                    <ChatMessage message={message} />
                   </div>
                 );
               })}
