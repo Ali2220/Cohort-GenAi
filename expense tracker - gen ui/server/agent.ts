@@ -6,6 +6,8 @@ import { initDB } from "./db.js"
 import { addExpense, getExpenses, generateChart } from "./tool.js"
 import { ToolNode } from "@langchain/langgraph/prebuilt"
 import type { AIMessage, ToolMessage } from "@langchain/core/messages"
+import type { LangGraphRunnableConfig } from "@langchain/langgraph";
+import type { StreamMessage } from "./types.js"
 
 // initialize DB
 export const database = initDB('./expenses.db')
@@ -71,9 +73,18 @@ Be concise, accurate, and always select the correct tool based on user intent.`
 
 }
 
-function shouldContinue(state: typeof MessagesAnnotation.State) {
+function shouldContinue(state: typeof MessagesAnnotation.State, config: LangGraphRunnableConfig) {
     const lastMessage = state.messages[state.messages.length - 1] as AIMessage
     if (lastMessage?.tool_calls && lastMessage?.tool_calls.length) {
+        const customMessage: StreamMessage = {
+            type: "toolCall:start",
+            payload: {
+                name: lastMessage.tool_calls[0]?.name,
+                args: lastMessage.tool_calls[0]?.args
+            }
+        }
+
+        config.writer!(customMessage)
         return 'tools'
     }
 
@@ -106,30 +117,3 @@ const graph = new StateGraph(MessagesAnnotation)
     })
 
 export const agent = graph.compile({ checkpointer: new MemorySaver() })
-
-// async function main() {
-//     const response = await agent.stream({
-//         messages: [
-//             {
-//                 role: "human",
-//                 content: "show me a chart of my expenses for the last 3 months, grouped by month"
-//             }
-//         ]
-//     },
-//         {
-//             configurable: { thread_id: "1" },
-//             streamMode: "messages"
-//         }
-//     )
-
-//     for await (const [messageChunk] of response) {
-//         const text = messageChunk.content
-
-//         if (text) {
-//             process.stdout.write(text as string)
-//         }
-//     }
-
-// }
-
-// main()
