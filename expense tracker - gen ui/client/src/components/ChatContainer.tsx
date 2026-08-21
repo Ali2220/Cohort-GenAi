@@ -5,86 +5,92 @@ import { ChatMessage } from "./ChatMessage";
 import type { StreamMessage } from "../type.ts";
 
 export function ChatContainer() {
-  // 'messages' chat history ka array hai jo UI render karta hai.
-  // Ye dikhta kaisa hai:
-  // [
-  //   { id: "1715683920.123", type: "user", payload: { text: "Hi AI!" } },
-  //   { id: "1715683921.456", type: "ai", payload: { text: "Hello! Kaise" } }
-  // ]
+  // 'messages' state hamari puri chat history ko array ki shakal mein store karti hai
   const [messages, setMessages] = useState<StreamMessage[]>([]);
 
   async function submitQuery(userInput: string) {
-    // 'userInput' string hai jo input field se aati hai.
-    // Ye dikhti kaisi hai: "Hi AI!"
-
+    // 1. Sab se pehle user ka type kiya hua message UI par dikhane ke liye state update karein
     setMessages((prevMessages) => {
-      // 'prevMessages' state update hone se pehle ka exact array snapshot hai.
-      // Ye same uper wale 'messages' array jaisa hi dikhta hai.
       return [
-        ...prevMessages,
+        ...prevMessages, // Purane tamam messages apni jagah barkarar rakhein
         {
-          id: Date.now().toString() + Math.random().toString(),
-          type: "user",
-          payload: { text: userInput },
+          id: Date.now().toString() + Math.random().toString(), // Naye message ke liye unique ID
+          type: "user", // Message kiski taraf se hai (User)
+          payload: { text: userInput }, // User ka asal text yahan aayega
         },
       ];
     });
 
+    // 2. Backend par Server-Sent Events (SSE) connection establish karein taake stream receive ho sake
     await fetchEventSource("http://localhost:3000/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: userInput }),
+      body: JSON.stringify({ query: userInput }), // User ki query backend ko bhej rahe hain
 
+      // 3. Jab bhi backend se data ka naya tukra (chunk) aayega, ye function lagatar chalega
       onmessage(ev) {
-        // 'ev.data' backend se stream hone wala raw string/text hai.
-        // Ye dikhta kaisa hai: "{\"payload\":{\"text\":\" ho?\"}}"
-
-        // 'parsedData' string ko proper JavaScript object mein convert kar deta hai.
-        // Ye dikhta kaisa hai:
-        // { payload: { text: " ho?" } }
+        // Backend se aane wale raw string data ko proper JavaScript object mein convert kar rahe hain
         const parsedData = JSON.parse(ev.data) as StreamMessage;
 
         setMessages((prevMessages) => {
-          // 'lastMessage' uss 'prevMessages' array ka sabse aakhri index (item) nikalta hai.
-          // Ye dikhta kaisa hai:
-          // { id: "1715683921.456", type: "ai", payload: { text: "Hello! Kaise" } }
+          // Array ka aakhri message nikal rahe hain taake pata chale chat kahan ruki thi
           const lastMessage = prevMessages[prevMessages.length - 1];
 
-          // Agar aakhri message already 'ai' ki hai, toh isi mein naya text append (jod) do
-          if (lastMessage && lastMessage.type === "ai") {
-            return [
-              ...prevMessages.slice(0, -1),
-              {
-                ...lastMessage,
-                payload: {
-                  // Yahan purana text ("Hello! Kaise") aur naya (" ho?") mil raha hai
-                  // Final result: "Hello! Kaise ho?"
-                  text: lastMessage.payload.text + parsedData.payload.text,
+          // CONDITION A: Agar backend se AI ka text chunk aaya hai (Typing mode)
+          if (parsedData.type === "ai") {
+            // SCENARIO 1: Agar pichla message bhi AI ka hi tha, toh naya bubble nahi banana balke text update karna hai
+            if (lastMessage && lastMessage.type === "ai") {
+              return [
+                ...prevMessages.slice(0, -1), // Aakhri message ko chhor kar array ke baqi tamam messages le lo
+                {
+                  ...lastMessage, // Aakhri message ki properties (jaise ID aur type) yahan copy kar lo taake wo delete na hon
+                  payload: {
+                    // Purane text ke aage naya aane wala text jod (append) do.
+                    // (|| "") lagana zaroori hai taake string null/undefined hone par app crash na ho
+                    text:
+                      (lastMessage.payload.text || "") +
+                      (parsedData.payload.text || ""),
+                  },
                 },
+              ]; // 🛑 Early Return: Yahan state update hui aur function yahi se wapas nikal jayega
+            }
+
+            // SCENARIO 2: Agar pichla message user ya tool ka tha, toh AI ka pehla word aane par naya bubble banao
+            return [
+              ...prevMessages, // Purane sab messages array mein daalo
+              {
+                id: Date.now().toString() + Math.random().toString(), // AI ke naye bubble ki fresh ID
+                type: "ai",
+                payload: { text: parsedData.payload.text }, // Stream hone wala pehla chunk
               },
-            ];
+            ]; // 🛑 Early Return
           }
 
-          // Agar aakhri message user ka tha, toh AI ka pehla chunk ek naye object ki tarah add hoga
-          return [
-            ...prevMessages,
-            {
-              id: Date.now().toString() + Math.random().toString(),
-              // type ko zbardasti 'ai' de rahe hain (future tools k liye masla ho skta hai, behtar hai ...parsedData use krein)
-              type: "ai",
-              payload: { text: parsedData.payload.text },
-            },
-          ];
+          // CONDITION B: Agar backend ne bataya ke Tool chal raha hai (e.g., "get_expenses")
+          if (parsedData.type === "toolCall:start") {
+            return [
+              ...prevMessages,
+              {
+                id: Date.now().toString() + Math.random().toString(),
+                type: "toolCall:start", // specifically tool event ka type
+                payload: parsedData.payload, // Isme text nahi hota, balke tool ka 'name' aur 'args' aate hain
+              },
+            ]; // 🛑 Early Return
+          }
+
+          // DEFAULT CONDITION: Agar upar ki koi condition true nahi hoti (koi anjaan event aa jaye),
+          // toh purani state waisi ki waisi wapas kar do taake UI par error na aaye.
+          return prevMessages;
         });
       },
     });
   }
 
   const onSubmit = (userInput: string) => {
-    console.log("user input: ", userInput);
-    submitQuery(userInput); // SSE stream shuru karo
+    console.log("user input: ", userInput); // Debugging ke liye
+    submitQuery(userInput); // Asal function call jo chat ka flow shuru karega
   };
 
   return (

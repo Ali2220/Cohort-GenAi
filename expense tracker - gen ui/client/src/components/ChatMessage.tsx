@@ -1,4 +1,4 @@
-import { User, Brain } from "lucide-react";
+import { User, Brain, Settings } from "lucide-react";
 import type { StreamMessage } from "../type.ts";
 
 type Props = {
@@ -34,6 +34,27 @@ export function ChatMessage({ message }: Props) {
           <div className="text-sm font-medium text-zinc-300">AI</div>
           <div className="text-zinc-100 whitespace-pre-wrap wrap-break-word leading-7">
             {message.payload.text}
+          </div>
+        </div>
+      </div>
+    );
+  } else if (message.type === "toolCall:start") {
+    return (
+      <div className="flex gap-4 py-4 px-6 transition-colors bg-zinc-900/30">
+        <div className="shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center shadow-inner">
+            {/* Settings icon animate karega (ghoomega) */}
+            <Settings className="text-zinc-400 animate-spin" size={18} />
+          </div>
+        </div>
+        <div className="flex-1 flex items-center">
+          <div className="text-sm font-medium text-zinc-400 italic">
+            {/* Tool ka naam display kar rahe hain */}
+            Agent is running tool:{" "}
+            <span className="text-purple-400 font-mono ml-1">
+              {message.payload.name}
+            </span>
+            ...
           </div>
         </div>
       </div>
