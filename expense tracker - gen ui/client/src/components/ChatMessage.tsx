@@ -22,7 +22,8 @@ export function ChatMessage({ message }: Props) {
         </div>
       </div>
     );
-  } else if (message.type === "ai") {
+  }
+  else if (message.type === "ai") {
     return (
       <div className="flex gap-4 py-6 px-6 transition-colors">
         <div className="shrink-0">
@@ -38,7 +39,8 @@ export function ChatMessage({ message }: Props) {
         </div>
       </div>
     );
-  } else if (message.type === "toolCall:start") {
+  }
+  else if (message.type === "toolCall:start") {
     return (
       <div className="flex gap-4 py-4 px-6 transition-colors bg-zinc-900/30">
         <div className="shrink-0">
@@ -55,6 +57,24 @@ export function ChatMessage({ message }: Props) {
               {message.payload.name}
             </span>
             ...
+          </div>
+        </div>
+      </div>
+    );
+  }
+  else if (message.type === "tool") {
+    const { name, result } = message.payload;
+
+    return (
+      <div className="flex gap-4 py-4 px-6 my-2 rounded-xl bg-zinc-900/60 border border-zinc-800">
+        <div className="flex-1 space-y-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-purple-400">
+            Tool Output: {name || "Result"}
+          </div>
+
+          {/* Output JSON data render kar rahe hain */}
+          <div className="text-sm font-mono text-zinc-300 bg-zinc-950 p-3 rounded-lg overflow-x-auto border border-zinc-800/80">
+            <pre>{JSON.stringify(result, null, 2)}</pre>
           </div>
         </div>
       </div>

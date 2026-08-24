@@ -80,7 +80,7 @@ function shouldContinue(state: typeof MessagesAnnotation.State, config: LangGrap
             type: "toolCall:start",
             payload: {
                 name: lastMessage.tool_calls[0]?.name,
-                args: lastMessage.tool_calls[0]?.args
+                args: lastMessage.tool_calls[0]?.args 
             }
         }
 
