@@ -1,5 +1,6 @@
 import { User, Brain, Settings } from "lucide-react";
 import type { StreamMessage } from "../type.ts";
+import { ExpenseChart } from "./ExpenseChart.tsx";
 
 type Props = {
   message: StreamMessage;
@@ -22,8 +23,7 @@ export function ChatMessage({ message }: Props) {
         </div>
       </div>
     );
-  }
-  else if (message.type === "ai") {
+  } else if (message.type === "ai") {
     return (
       <div className="flex gap-4 py-6 px-6 transition-colors">
         <div className="shrink-0">
@@ -39,8 +39,7 @@ export function ChatMessage({ message }: Props) {
         </div>
       </div>
     );
-  }
-  else if (message.type === "toolCall:start") {
+  } else if (message.type === "toolCall:start") {
     return (
       <div className="flex gap-4 py-4 px-6 transition-colors bg-zinc-900/30">
         <div className="shrink-0">
@@ -61,9 +60,17 @@ export function ChatMessage({ message }: Props) {
         </div>
       </div>
     );
-  }
-  else if (message.type === "tool") {
+  } else if (message.type === "tool") {
     const { name, result } = message.payload;
+
+    if (message.payload.name === "generate_chart") {
+      return (
+        <div className="py-4">
+          {/* result.data ya jahan bhi backend data array bhej raha hai wo pass karein */}
+          <ExpenseChart data={result.data} labelKey={result.labelKey} />
+        </div>
+      );
+    }
 
     return (
       <div className="flex gap-4 py-4 px-6 my-2 rounded-xl bg-zinc-900/60 border border-zinc-800">

@@ -1,6 +1,10 @@
 {
   "files": [],
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     "jsx": "react-jsx"
   },
   "references": [
