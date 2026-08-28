@@ -2,11 +2,12 @@ import express from "express";
 import cors from "cors";
 import { agent } from "./agent.js";
 import type { StreamMessage } from "./types.js";
+import { scanReceipt } from "./scanner.js";
 
 const app = express();
 
 // Middleware Setup
-app.use(express.json());
+app.use(express.json({limit: "10mb"}));
 app.use(cors());
 
 // SSE Chat Streaming Endpoint
@@ -66,6 +67,20 @@ app.post("/chat", async (req, res) => {
 
   res.end();
 });
+
+app.post("/scan-receipt", async (req, res) => {
+  const { image } = req.body
+
+  if(!image){
+    return res.status(400).json({
+      message: "Image not found"
+    })
+  }
+
+  const result = await scanReceipt(image)
+
+  res.json(result)
+})
 
 // Start Server
 app.listen(3000, () => {
