@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "./ChatInput";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { ChatMessage } from "./ChatMessage";
@@ -6,6 +6,11 @@ import type { StreamMessage } from "../type.ts";
 
 export function ChatContainer() {
   const [messages, setMessages] = useState<StreamMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   async function submitQuery(userInput: string) {
     // 1. Append user message to UI immediately
@@ -206,6 +211,8 @@ export function ChatContainer() {
                   <ChatMessage message={message} />
                 </div>
               ))}
+
+              <div ref={messagesEndRef} />
             </div>
           )}
         </div>
