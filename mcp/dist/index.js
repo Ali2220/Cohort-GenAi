@@ -26,6 +26,38 @@ server.registerTool('get_all_students', {
         ]
     };
 });
+server.registerPrompt("student_welcome_letter", {
+    description: "Student ID ke hisab se welcome letter ka prompt banata hai",
+    argsSchema: {
+        studentId: z.string().describe('The id of a student')
+    }
+}, async ({ studentId }) => {
+    const student = students.find(s => s.id === Number(studentId));
+    if (!student) {
+        return {
+            messages: [
+                {
+                    role: "user",
+                    content: {
+                        type: "text",
+                        text: `${studentId} wala user nhi mila. Please sahi studentId dalo.`
+                    }
+                }
+            ]
+        };
+    }
+    return {
+        messages: [
+            {
+                role: "user",
+                content: {
+                    type: "text",
+                    text: `Aap ek university counselor hain. Student "${student.name}" (ID: ${student.id}) ne "${student.course}" course join kiya hai. Unke liye ek formal welcome letter likhein aur is course mein kamyabi ke 3 tips shamil karein.`
+                }
+            }
+        ]
+    };
+});
 const transport = new StdioServerTransport();
 await server.connect(transport);
 console.error('Ready');
