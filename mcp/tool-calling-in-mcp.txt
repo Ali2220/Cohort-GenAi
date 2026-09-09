@@ -1,0 +1,30 @@
+User: "Saare students ki list do"
+        ↓
+MCP Client (Claude Desktop) 
+        ↓
+LLM (Claude model) sochta hai:
+"get_all_students tool use karna chahiye"
+        ↓
+LLM returns tool call:
+{
+  name: "get_all_students",
+  arguments: {}
+}
+        ↓
+MCP Client sends request to MCP Server:
+tools/call
+        ↓
+MCP Server validates request
+        ↓
+MCP Server runs get_all_students handler
+        ↓
+Handler students array se data banata hai
+        ↓
+Server returns result:
+"Id: 101, Name: Ali Khan..."
+        ↓
+MCP Client result LLM ko deta hai
+        ↓
+LLM final answer likhta hai
+        ↓
+User ko answer milta hai
