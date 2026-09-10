@@ -67,37 +67,53 @@ server.registerPrompt("student_welcome_letter", {
         ]
     };
 });
-server.registerResource("student_profile", new ResourceTemplate("student://{studentId}/profile", {
+// Resource register kar rahe hain jo specific student ka profile return karegi
+server.registerResource("student_profile", // 1. Resource ka internal naam (unique identifier)
+// 2. ResourceTemplate: Dynamic URI banane ke liye
+new ResourceTemplate("student://{studentId}/profile", {
+    // LIST CALLBACK: Ye function jab call hoga to saare available resources ki list return karega
+    // Ye zaroori hai taake Claude Desktop UI mein resources dikh saken
     list: async () => {
         return {
+            // Har student ke liye ek resource object bana rahe hain
             resources: students.map(s => ({
-                uri: `student://${s.id}/profile`,
-                name: `${s.name} profile`,
-                description: `${s.name} (${s.course}) ka profile data`,
-                mimeType: 'application/json'
+                uri: `student://${s.id}/profile`, // Har student ka unique URI
+                name: `${s.name} profile`, // UI mein dikhne wala naam
+                description: `${s.name} (${s.course}) ka profile data`, // Description jo AI ko batayegi ke ye resource kya hai
+                mimeType: 'application/json' // Data format (JSON)
             }))
         };
     }
-}), {
-    description: "Kisi specific student ka detailed profile",
-    mimeType: "application/json"
-}, async (uri, params) => {
-    const id = Number(params.studentId);
+}), 
+// 3. Resource metadata (configuration)
+{
+    description: "Kisi specific student ka detailed profile", // AI ko batata hai ke ye resource kya karta hai
+    mimeType: "application/json" // Data ka format (JSON structured data)
+}, 
+// 4. Handler function: Ye tab chalega jab AI kisi specific resource ko read karega
+async (uri, params) => {
+    // params.studentId se dynamic ID extract kar rahe hain (URI se nikla hua value)
+    const id = Number(params.studentId); // String ko number mein convert karna
+    // Students array mein se wo specific student dhoond rahe hain
     const student = students.find(s => s.id === id);
+    // Agar student nahi milta (invalid ID)
     if (!student) {
+        // Error message return karna
         return {
             contents: [{
-                    uri: uri.href,
-                    mimeType: "text/plain",
-                    text: `Student with ${id} not found`
+                    uri: uri.href, // Jo URI call hui thi
+                    mimeType: "text/plain", // Simple text format
+                    text: `Student with ${id} not found` // Error message
                 }]
         };
     }
+    // Agar student mil jaye to uska data JSON format mein return karna
     return {
         contents: [{
-                uri: uri.href,
-                mimeType: "application/json",
-                text: JSON.stringify(student, null, 2)
+                uri: uri.href, // Jo URI call hui thi
+                mimeType: "application/json", // JSON format specify karna
+                text: JSON.stringify(student, null, 2) // Student object ko formatted JSON string mein convert karna
+                // null, 2 ka matlab: pretty print karo (2 spaces indentation ke sath)
             }]
     };
 });
