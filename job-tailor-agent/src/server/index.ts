@@ -2,6 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
 import * as cheerio from "cheerio"
+import { readFile } from "node:fs/promises"
+import path from "node:path"
 
 // MCP Server instance
 const server = new McpServer({ name: "job-tailor", version: "1.0.0" })
@@ -41,11 +43,11 @@ server.registerTool(
             // Faltu tags hatayein
             $("script, style, nav, footer, header, iframe, noscript").remove()
 
-            // Body text clean karein: spaces collapse + 8000 chars truncate
+            // Body text clean karein: spaces collapse + 9000 chars truncate
             const rawText = $("body").text()
                 .replace(/\s+/g, " ")
                 .trim()
-                .slice(0, 8000)
+                .slice(0, 9000)
 
             // Structured format mein return karein
             return {
@@ -63,6 +65,51 @@ server.registerTool(
                 }],
                 isError: true
             }
+        }
+    }
+)
+
+// process.cwd() = current working directory
+// DATA_DIR = C:\Users\dev\Desktop\GenAi-Cohort\job-tailor-agent\data
+const DATA_DIR = path.join(process.cwd(), "data")
+
+// this resource read the content of resume and return to AI
+server.registerResource(
+    "master_resume",
+    "resume://master",   // Static URI (fixed address)
+    {
+        description: "The user's master resume in markdown format",
+        mimeType: "text/markdown"
+    },
+    async (uri) => {
+        // data folder se resume parhein
+        const content = await readFile(path.join(DATA_DIR, "master-resume.md"), "utf-8")
+        return {
+            contents: [{
+                uri: uri.href,          // Jo URI request hui
+                mimeType: "text/markdown",
+                text: content           // Resume ka poora text
+            }]
+        }
+    }
+)
+
+// this resource read the contact information from contact.json and returns to AI
+server.registerResource(
+    "contact_info",
+    "profile://contact",
+    {
+        description: "The user's contact information (JSON)",
+        mimeType: "application/json"
+    },
+    async (uri) => {
+        const content = await readFile(path.join(DATA_DIR, "contact.json"), "utf-8")
+        return {
+            contents: [{
+                uri: uri.href,
+                mimeType: "application/json",
+                text: content
+            }]
         }
     }
 )
