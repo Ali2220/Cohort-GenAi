@@ -73,7 +73,7 @@ server.registerTool(
 // DATA_DIR = C:\Users\dev\Desktop\GenAi-Cohort\job-tailor-agent\data
 const DATA_DIR = path.join(process.cwd(), "data")
 
-// this resource read the content of resume and return to AI
+// this resource read the content of resume from master-resume.md and return to AI
 server.registerResource(
     "master_resume",
     "resume://master",   // Static URI (fixed address)
@@ -82,14 +82,37 @@ server.registerResource(
         mimeType: "text/markdown"
     },
     async (uri) => {
-        // data folder se resume parhein
-        const content = await readFile(path.join(DATA_DIR, "master-resume.md"), "utf-8")
-        return {
-            contents: [{
-                uri: uri.href,          // Jo URI request hui
-                mimeType: "text/markdown",
-                text: content           // Resume ka poora text
-            }]
+        try {
+            // data folder se resume parhein
+            const content = await readFile(path.join(DATA_DIR, "master-resume.md"), "utf-8")
+
+            // Empty file check
+            if (!content.trim()) {
+                return {
+                    contents: [{
+                        uri: uri.href,
+                        mimeType: "text/plain",
+                        text: "Error: master-resume.md file khali hai! Kuch content likhein."
+
+                    }]
+                }
+            }
+
+            return {
+                contents: [{
+                    uri: uri.href,          // Jo URI request hui
+                    mimeType: "text/markdown",
+                    text: content           // Resume ka poora text
+                }]
+            }
+        } catch (error) {
+            return {
+                contents: [{
+                    uri: uri.href,
+                    mimeType: "text/plain",
+                    text: `Error reading resume: ${error instanceof Error ? error.message : "Unknown error"}`
+                }]
+            }
         }
     }
 )
