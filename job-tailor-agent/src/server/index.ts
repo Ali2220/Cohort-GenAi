@@ -2,7 +2,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import * as cheerio from "cheerio";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import path from "node:path";
 
 // MCP Server instance
@@ -241,6 +242,182 @@ Structure:
           },
         },
       ],
+    };
+  },
+);
+
+// "C:\\Users\\dev\\Desktop\\GenAi-Cohort\\job-tailor-agent\\output"
+const OUTPUT_DIR = path.join(process.cwd(), "output");
+
+// wrapText - Lambi lines ko torna
+// Input: text (string), maxChars (number, default 95)
+// Output: lines (string[]) - array of wrapped lines
+function wrapText(text: string, maxChars = 95): string[] {
+  // lines: ["Line 1 text", "Line 2 text", "", "Line 4 text"]
+  const lines: string[] = [];
+
+  // text ko paragraphs mein split karein (har \n par)
+  // paragraph = ek paragraph ka text
+  // Shape: "Ye pehla paragraph hai" ya "" (khali)
+  for (const paragraph of text.split("\n")) {
+    // Agar paragraph khali hai (sirf spaces/newlines)
+    if (paragraph.trim() === "") {
+      lines.push(""); // Khali line add karo (spacing ke liye)
+      continue;
+    }
+
+    // current = current line jo hum bana rahe hain
+    // Shape: "" → "Hello" → "Hello world" → "Hello world this"
+    let current = "";
+
+    // paragraph ko words mein split karein (space se)
+    // word = ek word
+    // Shape: "Hello", "world", "this", "is", "a", "test"
+    for (const word of paragraph.split(" ")) {
+      // Check: agar current + space + word milakar maxChars se barh jaye
+      if ((current + " " + word).trim().length > maxChars) {
+        // Line bhar gayi! Current ko finalize karo
+        lines.push(current.trim());
+        // Naye word se nayi line shuru karo
+        current = word;
+      } else {
+        // Line abhi bhar nahi, word jor do
+        current += " " + word;
+      }
+    }
+    // Paragraph khatam, bachi hui line push karo
+    lines.push(current.trim());
+  }
+
+  // Final wrapped lines return karo
+  // Shape: ["This is a very long", "paragraph that needs", "to be wrapped"]
+  return lines;
+}
+
+// TOOL: save_document - Markdown file save karna
+server.registerTool(
+  "save_document",
+  {
+    description: "A tool to save the document in .md format",
+    inputSchema: z.object({
+      fileName: z.string().describe("the name of the file without extension"),
+      content: z.string().describe("the content of the file"),
+    }),
+  },
+  async ({ fileName, content }) => {
+    // OUTPUT_DIR folder banao agar nahi hai
+    await mkdir(OUTPUT_DIR, { recursive: true });
+
+    // safeName = file name ko safe banao (special characters → dash)
+    // Input: "My Resume: Backend Dev"
+    // Output: "My-Resume--Backend-Dev"
+    const safeName = fileName.replace(/[^a-z0-9-_]/gi, "-");
+
+    // filePath = complete path with .md extension
+    // Shape: "C:\\Users\\dev\\Desktop\\GenAi-Cohort\\job-tailor-agent\\output\\my-resume.md"
+    const filePath = path.join(OUTPUT_DIR, `${safeName}.md`);
+
+    // File par content likho
+    await writeFile(filePath, content, "utf-8");
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Saved: ${filePath}`,
+        },
+      ],
+    };
+  },
+);
+
+// TOOL: export_to_pdf - Text ko PDF banana
+server.registerTool(
+  "export_to_pdf",
+  {
+    description:
+      "Converts plain text content into a simple PDF in the output folder",
+    inputSchema: z.object({
+      fileName: z.string().describe("File name without extension"),
+      content: z.string().describe("The document content"),
+    }),
+  },
+  async ({ fileName, content }) => {
+    // 1. Sanitize: PDF fonts sirf ASCII samajhte hain
+    // safeContent = cleaned text jisme curly quotes/dashes/emojis nahi hain
+    // Input: "Ali's resume — amazing! 🚀"
+    // Output: "Ali's resume - amazing! "
+    const safeContent = content
+      .replace(/[\u2018\u2019]/g, "'") // curly ' ' → straight '
+      .replace(/[\u201C\u201D]/g, '"') // curly " " → straight "
+      .replace(/[\u2013\u2014]/g, "-") // en/em dashes → hyphen
+      .replace(/[^\x00-\xFF]/g, ""); // non-Latin characters delete
+
+    // 2. Naya PDF document + font setup
+    // pdfDoc = khali PDF document object
+    const pdfDoc = await PDFDocument.create();
+
+    // font = embedded Helvetica font (basic ASCII font)
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    // fontSize = 11 points (standard readable size)
+    const fontSize = 11;
+
+    // margin = 50 points (page ke charon taraf khali space)
+    const margin = 50;
+
+    // 3. Pehla A4 page + starting y position
+    // page = A4 size page object (595 × 842 points)
+    let page = pdfDoc.addPage([595, 842]);
+
+    // y = vertical position (upar se neeche jata hai)
+    // Shape: 792 (842 - 50 margin)
+    let y = page.getSize().height - margin;
+
+    // 4. Har wrapped line draw karein
+    // wrapText(safeContent) = array of lines
+    // line = ek wrapped line ka text
+    // Shape: "# Ali Raza", "## Software Engineer", "", "### Skills", "- TypeScript"
+    for (const line of wrapText(safeContent)) {
+      // Agar y < margin (page bhar gaya, neeche pahunch gaye)
+      if (y < margin) {
+        // Naya page add karo
+        page = pdfDoc.addPage([595, 842]);
+        // y ko top par wapas le jao
+        y = page.getSize().height - margin;
+      }
+
+      // Line draw karo current page par
+      page.drawText(line, {
+        x: margin, // left se 50 points door
+        y, // current vertical position
+        size: fontSize, // 11 points
+        font, // Helvetica
+        color: rgb(0, 0, 0), // black color
+      });
+
+      // y ko neeche le jao (next line ke liye)
+      // fontSize * 1.4 = line spacing
+      y -= fontSize * 1.4;
+    }
+
+    // 5. PDF save karo file mein
+    await mkdir(OUTPUT_DIR, { recursive: true });
+
+    // safeName = sanitized file name
+    // Shape: "my-resume-pdf"
+    const safeName = fileName.replace(/[^a-z0-9-_]/gi, "-");
+
+    // filePath = complete path with .pdf extension
+    // Shape: "C:\\Users\\dev\\Desktop\\GenAi-Cohort\\job-tailor-agent\\output\\my-resume-pdf.pdf"
+    const filePath = path.join(OUTPUT_DIR, `${safeName}.pdf`);
+
+    // pdfDoc.save() = binary data (Uint8Array)
+    // writeFile = binary data ko file mein likhna
+    await writeFile(filePath, await pdfDoc.save());
+
+    return {
+      content: [{ type: "text", text: `PDF saved: ${filePath}` }],
     };
   },
 );
