@@ -21,24 +21,24 @@ export async function exportToPdfHandler({
     fileName: string
     content: string
 }): Promise<CallToolResult> {
-    // 1. Sanitize: PDF fonts sirf ASCII samajhte hain
+    // Sanitize: PDF fonts sirf ASCII samajhte hain
     const safeContent = content
         .replace(/[\u2018\u2019]/g, "'")   // curly single quotes
         .replace(/[\u201C\u201D]/g, '"')   // curly double quotes
         .replace(/[\u2013\u2014]/g, "-")   // en/em dashes
         .replace(/[^\x00-\xFF]/g, "")      // non-Latin characters
 
-    // 2. PDF document setup
+    // PDF document setup
     const pdfDoc = await PDFDocument.create()
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
     const fontSize = 11
     const margin = 50
 
-    // 3. Pehla A4 page
+    // Pehla A4 page
     let page = pdfDoc.addPage([595, 842])
     let y = page.getSize().height - margin
 
-    // 4. Har wrapped line draw karein
+    // Har wrapped line draw karein
     for (const line of wrapText(safeContent)) {
         // Page bhar gaya? → naya page
         if (y < margin) {
@@ -57,7 +57,7 @@ export async function exportToPdfHandler({
         y -= fontSize * 1.4 // line spacing
     }
 
-    // 5. Save karo
+    // Save karo
     await mkdir(OUTPUT_DIR, { recursive: true })
     const safeName = fileName.replace(/[^a-z0-9-_]/gi, "-")
     const filePath = path.join(OUTPUT_DIR, `${safeName}.pdf`)

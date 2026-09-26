@@ -14,17 +14,13 @@ import { registerContactInfoResource } from "./resources/contactInfo.js"
 import { registerTailorResumePrompt } from "./prompts/tailorResume.js"
 import { registerWriteCoverLetterPrompt } from "./prompts/writeCoverLetter.js"
 
-// ==========================================
 // Server instance
-// ==========================================
 export const server = new McpServer({
   name: "job-tailor",
   version: "1.0.0",
 })
 
-// ==========================================
 // TOOLS REGISTER
-// ==========================================
 server.registerTool(
   "scrape_job_url",
   {
@@ -52,14 +48,10 @@ server.registerTool(
   exportToPdfHandler
 )
 
-// ==========================================
 // RESOURCES REGISTER
-// ==========================================
 registerMasterResumeResource(server)
 registerContactInfoResource(server)
 
-// ==========================================
 // PROMPTS REGISTER
-// ==========================================
 registerTailorResumePrompt(server)
 registerWriteCoverLetterPrompt(server)
