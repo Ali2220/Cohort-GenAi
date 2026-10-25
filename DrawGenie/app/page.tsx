@@ -8,17 +8,14 @@ import ImageGenerationLoading from "@/components/image-generation";
 import { AIPromptInput } from "@/components/prompt-input";
 import { RightSidebar } from "@/components/right-sidebar";
 import { useRef, useState } from "react";
+import { useEditorStore } from "@/store/useEditorState";
 
 export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // const imageSelected = false;
-  const [imageSelected, setImageSelected] = useState(false);
-  const [image, setImage] = useState("");
+  const { image, setImage } = useEditorStore();
 
-  // ==========================================
   // FILE CHANGE HANDLER
-  // ==========================================
   // Ye function tab call hota hai jab user file picker se image select karta hai
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // e.target.files → FileList object (array jaisa)
