@@ -141,7 +141,7 @@ export const AIPromptInput = () => {
 
     // MAIN LOGIC: AI Edit Generate Karo
     // generateEdit → Store ka async action jo image + prompt ko server ke liye prepare karta hai
-    // Abhi console.log karta hai, future mein API call karega
+    // ye API call karega
     generateEdit();
 
     // UI STATUS UPDATE: "submitted" state set karo

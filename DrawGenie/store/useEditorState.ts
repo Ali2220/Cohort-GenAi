@@ -68,8 +68,37 @@ export const useEditorStore = create<EditorState>()(
                 const state = get();
 
                 console.log("Sending image and prompt to server...");
-                console.log("Prompt", state.prompt);
-                console.log("Image", state.image);
+                // console.log("Prompt", state.prompt);
+                // console.log("Image", state.image);
+
+                // Validation
+                if (!state.image || !state.prompt) {
+                    return
+                }
+
+                try {
+                    // Api call
+                    const response = await fetch('/api/edit-image', {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json" // JSON bhej rahe hain
+                        },
+                        body: JSON.stringify({
+                            imageBase64: state.image,  // Base64 string
+                            prompt: state.prompt   // User's prompt
+                        })
+                    })
+
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.status}`)
+                    }
+
+                    const result = await response.json()
+                    console.log("Result", result);
+
+                } catch (err) {
+
+                }
             },
         }),
     ),
