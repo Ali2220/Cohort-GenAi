@@ -1,105 +1,128 @@
-// ZUSTAND STORE
-// Ye store poore editor ki global state manage karta hai
-// Multiple components (Canvas, Toolbar, Sidebar) isay share karte hain
 
 import { create } from "zustand";
-import { devtools } from "zustand/middleware"; // Redux DevTools ke liye middleware
+import { devtools } from "zustand/middleware";
 
-// TYPE DEFINITION
-// TypeScript ko batata hai ke store mein kya hoga
 type EditorState = {
-    // STATE: Image
-    // Image data (Base64 string ya null)
     image: string | null;
-
-    // STATE: Prompt
     prompt: string;
 
-    // ACTIONS: Image
-    // Image ko update karne ka function
-    setImage: (imageData: string | null) => void;
+    isGenerating: boolean;
+    error: string | null;
 
-    // ACTIONS: Prompt
-    // Prompt ko update karne ka function
+    setImage: (image: string | null) => void;
     setPrompt: (prompt: string) => void;
 
-    // ACTIONS: Main Logic
-    // Image + Prompt ko server ke liye prepare karta hai
     generateEdit: () => Promise<void>;
 };
 
-// STORE CREATION
-// create<EditorState>()() → Double parentheses zaroori hain jab devtools-middleware use karo
-// devtools() → Redux DevTools mein state track karne ke liye
 export const useEditorStore = create<EditorState>()(
-    devtools(
-        // STORE DEFINITION
-        // set → Zustand ka function jo state update karta hai
-        // get → Current state access karne ke liye
-        (set, get) => ({
-            // INITIAL STATE
-            // Jab app pehli baar load hoti hai
-            image: null,
-            prompt: "",
+    devtools((set, get) => ({
+        // Initial state
+        image: null,
+        prompt: "",
+        isGenerating: false,
+        error: null,
 
-            // ACTION: setImage
-            // Ye function image state ko update karta hai
-            setImage: (imageData: string | null) =>
+        // Set uploaded image
+        setImage: (image) =>
+            set(
+                { image, error: null },
+                false,
+                "setImage"
+            ),
+
+        // Set user prompt
+        setPrompt: (prompt) =>
+            set({ prompt }, false, "setPrompt"),
+
+        // Generate AI image edit
+        generateEdit: async () => {
+            // 1. Get latest store state
+            const { image, prompt, isGenerating } = get();
+
+            if (isGenerating) return;
+
+            if (!image || !prompt.trim()) {
+                throw new Error(
+                    "Please upload an image and enter a prompt"
+                );
+            }
+
+            // 2. Start loading
+            set(
+                { isGenerating: true, error: null },
+                false,
+                "generateEdit/start"
+            );
+
+            try {
+                // 3. Call our Next.js API
+                const response = await fetch("/api/edit-image", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        imageBase64: image,
+                        prompt,
+                    }),
+                });
+
+                // 4. Read response
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error || "Failed to edit image"
+                    );
+                }
+
+                if (!result.editedImage) {
+                    throw new Error(
+                        "No edited image was returned"
+                    );
+                }
+
+                const editedImage = result.editedImage as string
+
+                console.table({
+                    promptSent: prompt,
+                    exactlySameData: image === editedImage,
+                    originalLength: image.length,
+                    editedLength: editedImage.length,
+                    validImageData: editedImage.startsWith("data:image/")
+                })
+
+                // 5. Save edited image in Zustand
                 set(
-                    // 1st arg: New state object (ya updater function)
-                    () => ({ image: imageData }),
-
-                    // 2nd arg: replace? (false = merge, true = replace poora state)
+                    { image: result.editedImage },
                     false,
+                    "generateEdit/success"
+                );
 
-                    // 3rd arg: Action name (DevTools mein dikhega)
-                    "setImage",
-                ),
+                console.log("Image edited successfully!");
+            } catch (error) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "Something went wrong";
 
-            // ACTION: setPrompt
-            // Ye function prompt state ko update karta hai
-            setPrompt: (prompt: string) =>
-                set(() => ({ prompt: prompt }), false, "setPrompt"),
+                // 6. Save error
+                set(
+                    { error: message },
+                    false,
+                    "generateEdit/error"
+                );
 
-            // ACTION: generateEdit
-            // Image + Prompt ko server ke liye prepare karta hai
-            generateEdit: async () => {
-                // Current state access karo
-                const state = get();
-
-                console.log("Sending image and prompt to server...");
-                // console.log("Prompt", state.prompt);
-                // console.log("Image", state.image);
-
-                // Validation
-                if (!state.image || !state.prompt) {
-                    return
-                }
-
-                try {
-                    // Api call
-                    const response = await fetch('/api/edit-image', {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json" // JSON bhej rahe hain
-                        },
-                        body: JSON.stringify({
-                            imageBase64: state.image,  // Base64 string
-                            prompt: state.prompt   // User's prompt
-                        })
-                    })
-
-                    if (!response.ok) {
-                        throw new Error(`Server error: ${response.status}`)
-                    }
-
-                    const result = await response.json()
-                    console.log("Result", result);
-
-                } catch (err) {
-
-                }
-            },
-        }),
-    ),
+                throw error;
+            } finally {
+                // 7. Stop loading
+                set(
+                    { isGenerating: false },
+                    false,
+                    "generateEdit/finished"
+                );
+            }
+        },
+    }))
 );

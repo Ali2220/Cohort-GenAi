@@ -80,9 +80,6 @@ const models = [
   },
 ];
 
-const SUBMITTING_TIMEOUT = 200;
-const STREAMING_TIMEOUT = 2000;
-
 const PromptInputAttachmentsDisplay = () => {
   const attachments = usePromptInputAttachments();
 
@@ -115,57 +112,52 @@ export const AIPromptInput = () => {
 
   const selectedModelData = models.find((m) => m.id === model);
 
-  const { setPrompt, generateEdit } = useEditorStore();
+  const { image, setPrompt, generateEdit, isGenerating } = useEditorStore();
 
   // HANDLE SUBMIT - Prompt Input Submit Handler
   // Ye function tab call hota hai jab user prompt input mein message or image submit karta hai
   // (Enter key press ya Send button click)
-  const handleSubmit = (message: PromptInputMessage) => {
-    // VALIDATION: Check if message has content
-    // message.text → User ka likha hua prompt text
-    const hasText = Boolean(message.text);
 
-    // message.files → Attached files (images, documents, etc.)
-    // ?.length → Optional chaining (agar files undefined ho to crash na ho)
-    const hasAttachments = Boolean(message.files?.length);
+  const handleSubmit = async (message: PromptInputMessage) => {
+    // 1. Get prompt
+    const userPrompt = message.text?.trim();
 
-    // Agar na text hai na attachments → Early return (kuch mat karo)
-    if (!(hasText || hasAttachments)) {
+    if (!userPrompt) {
       return;
     }
 
-    // STORE UPDATE: Prompt ko Zustand store mein save karo
-    // setPrompt → Zustand action jo prompt state update karta hai
-    // message.text → User ka prompt (e.g., "Remove background")
-    setPrompt(message.text);
+    // 2. Check image
+    if (!image) {
+      alert("Please upload an image first!");
+      setStatus("error");
+      return;
+    }
 
-    // MAIN LOGIC: AI Edit Generate Karo
-    // generateEdit → Store ka async action jo image + prompt ko server ke liye prepare karta hai
-    // ye API call karega
-    generateEdit();
+    // 3. Prevent duplicate API calls
+    if (isGenerating) {
+      return;
+    }
 
-    // UI STATUS UPDATE: "submitted" state set karo
-    // setStatus → Local component state (UI feedback ke liye)
-    // "submitted" → Button disable ho jayega, loading indicator dikhega
+    // 4. Save prompt to Zustand
+    setPrompt(userPrompt);
+
+    // 5. Start loading BEFORE API request
     setStatus("submitted");
 
-    // DEBUG LOG: Console mein message details dekho
-    console.log("Submitting message:", message);
+    try {
+      // 6. Call Pollinations through Zustand
+      await generateEdit();
 
-    // SIMULATED STATUS: "streaming" state (after delay)
-    // setTimeout → Fake delay simulate karta hai (testing ke liye)
-    // SUBMITTING_TIMEOUT → Constant (e.g., 1000ms = 1 second)
-    // "streaming" → AI response aa raha hai (typing indicator)
-    setTimeout(() => {
-      setStatus("streaming");
-    }, SUBMITTING_TIMEOUT);
-
-    // SIMULATED STATUS: "ready" state (after longer delay)
-    // STREAMING_TIMEOUT → Constant (e.g., 3000ms = 3 seconds)
-    // "ready" → AI response complete, input wapas enable ho jayega
-    setTimeout(() => {
+      // 7. Request completed successfully
       setStatus("ready");
-    }, STREAMING_TIMEOUT);
+
+      console.log("Image edited successfully!");
+    } catch (error) {
+      // 8. Handle error
+      console.error("Image editing failed:", error);
+
+      setStatus("error");
+    }
   };
 
   return (

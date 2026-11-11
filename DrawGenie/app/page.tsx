@@ -23,6 +23,8 @@ export default function Home() {
     // ?. → optional chaining (agar files undefined ho to crash na ho)
     const file = e.target.files?.[0];
 
+    if(!file) return
+
     // FileReader → Browser ka built-in API
     // File ko read karke Base64 string mein convert karta hai
     // Base64 = "data:image/png;base64,iVBORw0KGgo..." (browser mein directly use ho sakta hai)
@@ -48,7 +50,7 @@ export default function Home() {
     //
     // 'file as File' → TypeScript ko batana ke ye definitely File object hai
     // (warna TS error dega ke 'Blob | undefined' expected hai)
-    reader.readAsDataURL(file as File);
+    reader.readAsDataURL(file);
   };
 
   return (
