@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Download, History, Redo, Undo, Upload, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useEditorStore } from "@/store/useEditorState";
 
 export function Navbar() {
+
+  const { undo, redo, currentIndex, history } = useEditorStore()
+
   return (
     <header className="h-16 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between px-4 shrink-0 z-50">
       {/* Left: Branding */}
@@ -40,6 +44,8 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+            onClick={() => undo()}
+            disabled={currentIndex <= 0}
           >
             <Undo size={15} />
           </Button>
@@ -50,6 +56,8 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
+            onClick={() => redo()}
+            disabled={currentIndex >= history.length - 1}
           >
             <Redo size={15} />
           </Button>
