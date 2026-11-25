@@ -32,6 +32,9 @@ type EditorState = {
   // undo / redo
   undo: () => void;
   redo: () => void;
+
+  // clearHistory
+  clearHistory: () => void;
 };
 
 // ======================================
@@ -123,41 +126,74 @@ export const useEditorStore = create<EditorState>()(
       ),
 
     undo: () =>
-      set((state) => {
-        // pehli image (0) ya khali history (-1) par undo possible nahi
-        if (state.currentIndex === 0 || state.currentIndex < 0) {
-          return state;
-        }
+      set(
+        (state) => {
+          // pehli image (0) ya khali history (-1) par undo possible nahi
+          if (state.currentIndex === 0 || state.currentIndex < 0) {
+            return state;
+          }
 
-        // Ek qadam peeche jao
-        const newIndex = state.currentIndex - 1
+          // Ek qadam peeche jao
+          const newIndex = state.currentIndex - 1;
 
-        return {
-          currentIndex: newIndex,
-          image: state.history[newIndex]
-        }
-      },
+          return {
+            currentIndex: newIndex,
+            image: state.history[newIndex],
+          };
+        },
         false,
-        "undo"
+        "undo",
       ),
 
     redo: () =>
+      set(
+        (state) => {
+          // aakhri image par redo possible nahi
+          if (state.currentIndex >= state.history.length - 1) {
+            return state;
+          }
+
+          // Ek qadam agay jao
+          const newIndex = state.currentIndex + 1;
+
+          return {
+            currentIndex: newIndex,
+            image: state.history[newIndex],
+          };
+        },
+        false,
+        "redo",
+      ),
+
+    clearHistory: () =>
       set((state) => {
-        // aakhri image par redo possible nahi
-        if (state.currentIndex >= state.history.length - 1) {
-          return state
+        // Agar history mein 1 ya 0 images hain,
+        // to clear karne ki zaroorat nahi
+        if (state.history.length <= 1) {
+          return state;
         }
 
-        const newIndex = state.currentIndex + 1
+        // Currently selected image access karo
+        const selectedImage = state.image;
+
+        // Agar image available nahi hai to stop
+        if (!selectedImage) {
+          return state;
+        }
 
         return {
-          currentIndex: newIndex,
-          image: state.history[newIndex]
-        }
-      },
-        false,
-        "redo"
-      ),
+          // Sirf currently selected image preserve karo
+          // Baqi tamam history remove ho jayegi
+          history: [selectedImage],
+
+          // Ab history mein sirf aik image hai
+          // Isliye uska index 0 hoga
+          currentIndex: 0,
+
+          // Canvas par same image show hogi
+          image: selectedImage,
+        };
+      }),
 
     // GENERATE AI IMAGE EDIT
     generateEdit: async () => {
@@ -221,7 +257,5 @@ export const useEditorStore = create<EditorState>()(
 
       console.log("Image edited and saved in history!");
     },
-
-
   })),
 );

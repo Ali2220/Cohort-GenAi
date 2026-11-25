@@ -24,7 +24,7 @@ export const RightSidebar = () => {
   // History mein saved tamam images
   // Current selected index
   // Aur image select karne ka action
-  const { history, currentIndex, selectVersion } = useEditorStore();
+  const { history, currentIndex, selectVersion, clearHistory } = useEditorStore();
 
   return (
     <aside className="flex h-full w-40 flex-col shrink-0 border-l border-zinc-800 bg-zinc-950/50 z-20 overflow-hidden">
@@ -106,12 +106,7 @@ export const RightSidebar = () => {
         </ScrollArea>
       </div>
 
-      {/* ==================================
-          FOOTER - CLEAR HISTORY
-      ================================== */}
-
-      {/* Clear History button visible rahega
-          lekin abhi functional nahi hoga */}
+      {/* FOOTER - CLEAR HISTORY */}
 
       <div className="p-3 border-t border-zinc-800 shrink-0 bg-zinc-950/80 backdrop-blur-sm z-30">
         <TooltipProvider>
@@ -122,7 +117,8 @@ export const RightSidebar = () => {
                 size="sm"
                 className="w-full text-zinc-500 hover:text-red-400 hover:bg-zinc-900 rounded-lg"
                 // Clear history abhi implement nahi karni
-                disabled={true}
+                disabled={history.length <= 1}
+                onClick={clearHistory}
               >
                 <Trash2 size={14} className="mr-2" />
 
