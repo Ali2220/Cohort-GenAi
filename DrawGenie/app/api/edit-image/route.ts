@@ -1,32 +1,40 @@
 import { NextResponse } from "next/server";
+import sharp from "sharp";
 
-// RUNTIME CONFIG
-// "nodejs" = Node.js environment use karo (Edge runtime nahi)
-// Kyun zaroori? Kyunke hum Buffer use kar rahe hain
-// Buffer sirf Node.js mein available hai, Edge runtime mein nahi
 export const runtime = "nodejs";
 
-// POLLINATIONS API ENDPOINT
-// /v1/images/edits = Image EDITING endpoint (image + prompt leta hai)
-const API_URL = "https://gen.pollinations.ai/v1/images/edits";
+// image-editing model of cloudflare workers ai
+const MODEL_ID = "@cf/black-forest-labs/flux-2-klein-4b";
 
-// 5 MB limit = 5 * 1024 KB * 1024 bytes = 5,242,880 bytes
-// Bari images server ki memory bhar deti hain, isliye limit zaroori
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+// Maximum uploaded image size 5 MB hogi.
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+// Cloudflare ki reference image 512x512 se chhoti honi chahiye.
+const MAX_INPUT_WIDTH = 511;
+const MAX_INPUT_HEIGHT = 511;
+
+// Generated image ki output resolution.
+// 512x512 rakhi hai taake free quota kam consume ho.
+const OUTPUT_WIDTH = 512;
+const OUTPUT_HEIGHT = 512;
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.POLLINATIONS_API_KEY;
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 
-    if (!apiKey) {
+    if (!apiToken || !accountId) {
       return NextResponse.json(
-        { error: "Pollinations API key is missing" },
-        { status: 500 }, // 500 = Internal Server Error
+        {
+          error: "Cloudflare API token or Account ID is missing",
+        },
+        { status: 500 },
       );
     }
 
-    // FRONTEND SE DATA RECEIVE KARO
-    // Frontend ne bheja tha: { imageBase64: "data:image/png;base64,...", prompt: "..." }
+    const API_URL = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL_ID}`;
+
+    // Frontend se image aur prompt receive karo.
     const body = await request.json();
 
     const { imageBase64, prompt } = body ?? {};
@@ -38,7 +46,7 @@ export async function POST(request: Request) {
     ) {
       return NextResponse.json(
         { error: "Image and prompt are required" },
-        { status: 400 }, // 400 = Bad Request (client ki ghalti)
+        { status: 400 },
       );
     }
 
@@ -49,19 +57,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // DATA URL KO TODDO (MIME + Base64)
-    // Input: "data:image/png;base64,iVBORw0KGgo..."
-    // Regex breakdown:
-    //   ^data:              → string "data:" se shuru ho
-    //   (image\/(?:png|jpeg|webp)) → GROUP 1: sirf ye 3 formats allow
-    //   ;base64,            → literal ";base64,"
-    //   ([A-Za-z0-9+/=]+)   → GROUP 2: valid Base64 characters
-    //   $                   → string yahan khatam ho
+    // DATA URL SE BASE64 EXTRACT KARO
+    // Sirf PNG, JPEG aur WebP formats accept honge.
+    // Example:
+    // data:image/png;base64,iVBORw0KGgo...
     const match = imageBase64.match(
       /^data:(image\/(?:png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/,
     );
 
-    // Agar regex match nahi hua → format galat hai (GIF, SVG, etc.)
+    // Agar regex match nahi hui to format invalid hai.
     if (!match) {
       return NextResponse.json(
         { error: "Only PNG, JPEG and WebP are supported" },
@@ -69,190 +73,258 @@ export async function POST(request: Request) {
       );
     }
 
-    // match[0] = poora matched string
-    // match[1] = pehla capture group = MIME type ("image/png")
-    // match[2] = doosra capture group = sirf Base64 data ("iVBORw0...")
-    const mimeType = match[1];
+    // match[1] = Original image ka MIME type.
+    // match[2] = Sirf Base64 encoded image data.
     const base64Data = match[2];
 
-    // SIZE CHECK (DECODE SE PEHLE!)
-    // Base64 encoding data ko ~33% bara kar deti hai
-    // Isliye: 5MB binary ≈ 6.67MB Base64 (5 * 1.33)
-    // 1.4 factor = thora safety margin
+    // Base64 decode karne se pehle size check karo.
+    // Base64 encoding image ka size taqreeban 33% barha deti hai.
     if (base64Data.length > MAX_IMAGE_SIZE * 1.4) {
       return NextResponse.json(
         { error: "Image must be smaller than 5 MB" },
-        { status: 413 }, // 413 = Payload Too Large
-      );
-    }
-
-    // BASE64 → BINARY BUFFER
-    // Buffer.from(string, "base64") = Base64 string ko asli binary bytes mein convert
-    // Input:  "iVBORw0KGgo..."  (text string)
-    // Output: <Buffer 89 50 4e 47 0d 0a...>  (actual image bytes)
-    //
-    // Kyun? Pollinations ko asli file chahiye, text string nahi
-    const imageBuffer = Buffer.from(base64Data, "base64");
-
-    // FINAL SIZE VALIDATION
-    // length === 0 → corrupt/empty image
-    // length > MAX → 5MB se bari (exact check, estimate nahi)
-    if (imageBuffer.length === 0 || imageBuffer.length > MAX_IMAGE_SIZE) {
-      return NextResponse.json(
-        { error: "Invalid image or image too large" },
         { status: 413 },
       );
     }
 
-    // MULTIPART FORMDATA BANAO
-    // Pollinations ka /edits endpoint FormData mangta hai (JSON nahi)
-    // FormData = container jo text + files ek sath pack karta hai
+    // BASE64 KO BUFFER MEIN CONVERT KARO
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    // Image ka actual binary size check karo.
+    if (imageBuffer.length === 0) {
+      return NextResponse.json(
+        { error: "Image is empty or invalid" },
+        { status: 400 },
+      );
+    }
+
+    if (imageBuffer.length > MAX_IMAGE_SIZE) {
+      return NextResponse.json(
+        { error: "Image must be smaller than 5 MB" },
+        { status: 413 },
+      );
+    }
+
+    // SHARP SE IMAGE RESIZE KARO
+    // Cloudflare ko reference image 512x512 se
+    // chhoti chahiye, isliye image resize karenge.
+
+    let resizedBuffer: Buffer;
+
+    try {
+      resizedBuffer = await sharp(imageBuffer, {
+        // Bohat bari pixel resolution wali images
+        // ko process karne se rokne ke liye limit.
+        limitInputPixels: 40_000_000,
+      })
+        // Mobile camera images ki orientation correct karo.
+        .rotate()
+
+        .resize({
+          width: MAX_INPUT_WIDTH,
+          height: MAX_INPUT_HEIGHT,
+
+          // Aspect ratio preserve rahega.
+          // Image stretch ya distort nahi hogi.
+          fit: "inside",
+
+          // Agar image pehle se chhoti hai
+          // to usko unnecessarily bara nahi karenge.
+          withoutEnlargement: true,
+        })
+
+        // Har processed image ko PNG mein convert karo.
+        // Isse Blob ka MIME type consistent rahega.
+        .png()
+
+        // IMPORTANT:
+        // Sharp pipeline ko execute karke
+        // actual processed Buffer receive karo.
+        .toBuffer();
+    } catch (error) {
+      console.error("Image resizing failed:", error);
+
+      return NextResponse.json(
+        { error: "Invalid image or image resizing failed" },
+        { status: 400 },
+      );
+    }
+
+    // RESIZED BUFFER KO BLOB MEIN CONVERT KARO
+    const imageBlob = new Blob([new Uint8Array(resizedBuffer)], {
+      type: "image/png",
+    });
+
+    // CLOUDFLARE FORMDATA PREPARE KARO
     const formData = new FormData();
 
-    // MIME type se file extension decide karo
-    // "image/jpeg" → "jpg", "image/webp" → "webp", warna "png"
-    // Nested ternary: condition ? true : (condition ? true : false)
-    const extension =
-      mimeType === "image/jpeg"
-        ? "jpg"
-        : mimeType === "image/webp"
-          ? "webp"
-          : "png";
+    formData.append("input_image_0", imageBlob, "original.png");
 
-    // BUFFER → BLOB CONVERSION
-    // Blob = "Binary Large Object" = browser/Node ka file representation
-    // new Uint8Array(imageBuffer) = Buffer ko standard byte array mein convert
-    //   (kyun? Blob constructor ko Uint8Array chahiye, Node Buffer nahi)
-    // { type: mimeType } = Blob ko batana ke ye kis type ki file hai
-    const imageBlob = new Blob([new Uint8Array(imageBuffer)], {
-      type: mimeType,
-    });
-
-    // FORMDATA MEIN FIELDS ADD KARO
-    // append(name, value, filename)
-    // Teesra argument (filename) zaroori hai files ke liye
-    // Isse server ko pata chalta hai ke ye ek FILE hai, text nahi
-    formData.append(
-      "image", // Field name (API ko yahi chahiye)
-      imageBlob, // Actual binary file
-      `original.${extension}`, // Filename: "original.png"
-    );
-
-    // Text field: user ka prompt (spaces trim karke)
+    // User ka editing prompt add karo.
     formData.append("prompt", prompt.trim());
 
-    // MODEL SELECTION
-    // FLUX.1 Kontext Pro = Black Forest Labs ka IMAGE EDITING model
-    // Ye model original image ko samajh kar usme changes karta hai
-    // (text-to-image models naya image banate hain, edit nahi karte)
-    formData.append("model", "black-forest-labs/flux.1-kontext-pro");
+    // FormData text values string mein leta hai,
+    // isliye numbers ko String() se convert karenge.
+    formData.append("width", String(OUTPUT_WIDTH));
+    formData.append("height", String(OUTPUT_HEIGHT));
 
-    // Output image ka size
-    formData.append("size", "1024x1024");
-
-    // Response format: "b64_json" = Base64 string JSON mein
-    // Alternative: "url" = image ka URL milta
-    // Base64 behtar hai kyunke URL expire ho sakta hai
-    formData.append("response_format", "b64_json");
-
-    // POLLINATIONS KO REQUEST BHEJO
+    // CLOUDFLARE API REQUEST
     const aiResponse = await fetch(API_URL, {
       method: "POST",
+
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiToken}`,
       },
+
+      // Image, prompt, width aur height send karo.
       body: formData,
-      cache: "no-store", // Response cache mat karo (har baar fresh result)
+
+      // Har request ka fresh response chahiye.
+      cache: "no-store",
     });
 
-    // STEP 8: API ERRORS HANDLE KARO
-    // response.ok = status 200-299 ke beech hai?
-    if (!aiResponse.ok) {
-      // Error details text mein parho (JSON bhi ho sakta hai, isliye .text())
-      const details = await aiResponse.text();
+    // Expected response:
+    // {
+    //   success: true,
+    //   errors: [],
+    //   result: {
+    //     image: "iVBORw0KGgo..."
+    //   }
+    // }
+    const result = await aiResponse.json().catch(() => null);
 
-      // slice(0, 500) = sirf pehle 500 characters log karo
-      // (error response bohat lamba ho sakta hai)
-      console.error(
-        "Pollinations error:",
-        aiResponse.status,
-        details.slice(0, 500),
-      );
+    if (!aiResponse.ok || result?.success !== true) {
+      // Cloudflare ke internal error codes access karo.
+      const errorCodes: number[] = Array.isArray(result?.errors)
+        ? result.errors.map((error: { code: number }) => error.code)
+        : [];
 
-      // SPECIFIC ERROR CODES
-      // 402 = Payment Required (credits khatam ya paid model)
-      if (aiResponse.status === 402) {
+      console.error("Cloudflare API error:", {
+        status: aiResponse.status,
+        errors: result?.errors,
+      });
+
+      // 3036 = Daily free Neurons allocation khatam.
+      if (errorCodes.includes(3036)) {
         return NextResponse.json(
           {
-            error: "Insufficient Pollen credits or model requires paid credits",
+            error: "Daily free AI quota exhausted. Try again after reset.",
           },
-          { status: 402 },
-        );
-      }
-
-      // 401 = Unauthorized (API key galat hai)
-      // 502 = Bad Gateway (upstream service ka issue, humara nahi)
-      if (aiResponse.status === 401) {
-        return NextResponse.json(
-          { error: "Invalid Pollinations API key" },
-          { status: 502 },
-        );
-      }
-
-      // 429 = Too Many Requests (rate limit cross ho gayi)
-      if (aiResponse.status === 429) {
-        return NextResponse.json(
-          { error: "API rate limit reached" },
           { status: 429 },
         );
       }
 
-      // Baqi saare errors (500, 503, etc.)
+      // 5035 = Model Workers Paid plan require karta hai.
+      if (errorCodes.includes(5035)) {
+        return NextResponse.json(
+          {
+            error: "This model requires a Cloudflare paid plan",
+          },
+          { status: 403 },
+        );
+      }
+
+      // 401 = Authentication error.
+      if (aiResponse.status === 401) {
+        return NextResponse.json(
+          { error: "Invalid Cloudflare API token" },
+          { status: 502 },
+        );
+      }
+
+      // 403 = Token permissions ya account access issue.
+      if (aiResponse.status === 403) {
+        return NextResponse.json(
+          { error: "Cloudflare API permission denied" },
+          { status: 502 },
+        );
+      }
+
+      // 429 = Rate limit ya temporary model capacity issue.
+      if (aiResponse.status === 429) {
+        return NextResponse.json(
+          {
+            error: "Cloudflare rate limit or capacity limit reached",
+          },
+          { status: 429 },
+        );
+      }
+
+      // 400 = Request fields ya image input invalid hai.
+      if (aiResponse.status === 400) {
+        return NextResponse.json(
+          { error: "Invalid Cloudflare image editing request" },
+          { status: 400 },
+        );
+      }
+
+      // 413 = Request ka size limit se zyada hai.
+      if (aiResponse.status === 413) {
+        return NextResponse.json(
+          { error: "Cloudflare request is too large" },
+          { status: 413 },
+        );
+      }
+
+      // Baqi unexpected upstream errors.
       return NextResponse.json(
-        { error: "Pollinations API request failed" },
+        { error: "Cloudflare AI request failed" },
         { status: 502 },
       );
     }
 
-    // STEP 9: RESPONSE SE IMAGE NIKALO
-    // Pollinations ka response shape:
-    // { data: [ { b64_json: "iVBORw0KGgo..." } ] }
-    const result = await aiResponse.json();
+    const editedBase64 = result.result?.image;
 
-    // ?. = optional chaining (agar data ya [0] undefined ho to crash na ho)
-    const editedBase64: string | undefined = result.data?.[0]?.b64_json;
-
-    // Agar image nahi mili → error throw karo (catch block mein jayega)
-    if (!editedBase64) {
-      throw new Error("No edited image returned");
+    // Check karo edited image valid string hai.
+    if (typeof editedBase64 !== "string" || !editedBase64.trim()) {
+      return NextResponse.json(
+        { error: "No edited image returned by Cloudflare" },
+        { status: 502 },
+      );
     }
 
-    // MAGIC BYTES SE OUTPUT FORMAT DETECT KARO
-    // Har image format ke pehle bytes fixed hote hain ("magic numbers"):
-    //
-    // JPEG → FF D8 FF → Base64 mein "/9j/" se shuru hota hai
-    // WebP → "RIFF"   → Base64 mein "UklGR" se shuru hota hai
-    // PNG  → 89 50 4E 47 → Base64 mein "iVBOR" se shuru hota hai
-    //
-    // Kyun zaroori? Model kabhi JPEG deta hai, kabhi PNG
-    // Galat MIME type lagane se image display nahi hogi
-    const outputMime = editedBase64.startsWith("/9j/")
-      ? "image/jpeg"
-      : editedBase64.startsWith("UklGR")
-        ? "image/webp"
-        : "image/png"; // Default: PNG
+    let outputMime: string;
 
-    // DATA URL BANAO
-    // Raw Base64: "iVBORw0..."  → <img src> mein kaam NAHI karta
-    // Data URL:   "data:image/png;base64,iVBORw0..."  → kaam karta hai ✅
-    // Browser ko MIME type batana zaroori hai
+    try {
+      // AI ke Base64 output ko Buffer mein convert karo.
+      const outputBuffer = Buffer.from(editedBase64, "base64");
+
+      // Sharp metadata se actual image format pata karo.
+      const metadata = await sharp(outputBuffer).metadata();
+
+      switch (metadata.format) {
+        case "jpeg":
+          outputMime = "image/jpeg";
+          break;
+
+        case "png":
+          outputMime = "image/png";
+          break;
+
+        case "webp":
+          outputMime = "image/webp";
+          break;
+
+        default:
+          throw new Error("Unsupported output image format");
+      }
+    } catch (error) {
+      console.error("Invalid Cloudflare image output:", error);
+
+      return NextResponse.json(
+        { error: "Cloudflare returned an invalid image" },
+        { status: 502 },
+      );
+    }
+
+    // BASE64 KO DATA URL MEIN CONVERT KARO
     const editedImage = `data:${outputMime};base64,${editedBase64}`;
 
     return NextResponse.json({
       success: true,
-      editedImage, 
+      editedImage,
     });
   } catch (error) {
+    // Unexpected server ya network errors handle karo.
     console.error("Image editing error:", error);
 
     return NextResponse.json(

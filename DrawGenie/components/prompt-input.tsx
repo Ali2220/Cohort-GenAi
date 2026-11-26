@@ -112,7 +112,7 @@ export const AIPromptInput = () => {
 
   const selectedModelData = models.find((m) => m.id === model);
 
-  const { image, setPrompt, generateEdit, isGenerating } = useEditorStore();
+  const { image, setPrompt, generateEdit } = useEditorStore();
 
   // HANDLE SUBMIT - Prompt Input Submit Handler
   // Ye function tab call hota hai jab user prompt input mein message or image submit karta hai
@@ -133,11 +133,6 @@ export const AIPromptInput = () => {
       return;
     }
 
-    // 3. Prevent duplicate API calls
-    if (isGenerating) {
-      return;
-    }
-
     // 4. Save prompt to Zustand
     setPrompt(userPrompt);
 
@@ -145,7 +140,6 @@ export const AIPromptInput = () => {
     setStatus("submitted");
 
     try {
-      // 6. Call Pollinations through Zustand
       await generateEdit();
 
       // 7. Request completed successfully
